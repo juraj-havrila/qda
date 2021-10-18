@@ -1,0 +1,3520 @@
+////!!!!!!!!!!!!!!!!!!!!  NICHT VERWENDEN      !!!! Entwicklungsversion  (JHAVRIL, 09/2021)
+///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+// Type:Systemscript No:    7     Name:OnAfterLoad3DImportHeader             Date:07.05.2018 09:25:18
+// Type:Batchscript No:10245      Name:VS 7 OnAfterLoad3DImportHeader V2.26  Date:02.03.2018 16:04:46
+// Type:Systemscript No:    7     Name:OnAfterLoad3DImportHeader             Date:02.03.2018 15:47:06
+//================================================================================================                             
+// Type:System No:7 PAC  OnAfterLoad3DImportHeader  V2.50 QDA9    Build-Date: 11.08.2020 (aboeg)
+//================================================================================================
+//--- Besonderheit:                                        
+//--- =============                                                                                                                                                       
+//--- 20130408_js: ***Achtung*** generische Bearbeitung fuer den Checkplan im nachgelagerten Teil!
+//                               nach "case InterfaceCfgNo"                                                                                              
+//                                                                    
+//--- 20121029_ab:     VS 7 OnAfterLoad3DImportHeader V1.20 ABOEG,  29.10.2012                                                        
+//--- 20130403_js:     VS 7 OnAfterLoad3DImportHeader V1.21 JUERGS, 03.04.2013         
+//                     Refresh-Schutz fuer #IF    42+ (CISM#20052391)
+//--- 20130507_ab:     VS 7 OnAfterLoad3DImportHeader V1.22 ABOEG,  07.05.2013                                                                    
+//                      IPM-Ankopplung: Vorgangsbildung: Spezialfall abgefangen: in BeforeOpenFile Vorgangsbezeichnung neu aufbereitet                       
+//                      Grund: PLA-Report liefert im Vorgang einen nicht eindeutigen Vorgangstext                                             
+//                      Abhilfe: in Zeile 8 steht der eindeitig machende Text             
+//                      Bsp.:    PLA:    Z3: VAG_L2_OP120+LAGERAUSSE_Serie_SPC                                                                                                            
+//                        1) PLA: Z8: LAGERAUSSENRING GROSS in LB
+//                           über eigene Abfrage einen neuen Text basteln: VAG_L2_OP120+LGAusRiGrossInLB
+//                        2) PLA: Z8: LAGERAUSSENRING GROSS AUF AKR                                                     
+//                           über eigene Abfrage einen neuen Text basteln: VAG_L2_OP120+LGAusRiGrossAufAKR       
+//                                                                                                                 
+//--- 20130513_js:    VS 7 OnAfterLoad3DImportHeader V1.23                                                                                        
+//                    #IF4158: Ergänzungen für XML-Import der attributiven Merkmale, Hr. Jungk.
+//--- 20130619_ab:    VS 7 OnAfterLoad3DImportHeader V1.25
+//                    #IF4160: neues Interims-IF für Claas BR246 wg. Abschaltung Plausi Tol-Änderung
+//--- 20130626_ab:    VS 7 OnAfterLoad3DImportHeader V1.26                                                   
+//                    #IF4159: neues IF Frenco SWP: Order = SNR + PP  // H.Rodewald/H.Michel,H.Wolf                          
+//--- 20130702_js:    VS 7 OnAfterLoad3DImportHeader V1.27: SachNr_zu_Prüfplan_Zuordnung
+//            _ab:    + Integration SachNr_zu_Prüfplan_Zuordnung zu SWP Frenco // H.Rodewald/H.Michel,H.Wolf
+//--- 20130709_ab:    VS 7 OnAfterLoad3DImportHeader V1.28: SWP Frenco: Order = SNR + PP  // H.Rodewald/H.Michel,H.Wolf                 
+//--- 20130725_js:    VS 7 OnAfterLoad3DImportHeader V1.29: Interface 4161 analog zu
+//--- 20130812_ab:    VS 7 OnAfterLoad3DImportHeader V1.30: SWP /Polaris (analog Frenco): Order = SNR + PP
+//--- 20130919_ab:    VS 7 OnAfterLoad3DImportHeader V1.31: SWP Hommel/Jenoptik (analog Frenco): Order = SNR + PP                            
+//--- 20131015_ab:    VS 7 OnAfterLoad3DImportHeader V1.32: GPA: Alu-HAG: neues Marposs-IF integriert
+//--- 20131023_ab:    VS 7 OnAfterLoad3DImportHeader V1.33: GPA: Alu-HAG: neues Marposs-IF integriert: UZ=GetAuftragschluessel integriert
+//--- 20131104_jb:    VS 7 OnAfterLoad3DImportHeader V1.34: Interface 4118: Order = SNR + PP
+//--- 20131121_ab:    VS 7 OnAfterLoad3DImportHeader V1.35: Zugstrebe 231:      
+//                      IF: OP036: 4165 / OP038: 4167 / OP040: 4168 / OP083: 4169 / OP135: 4170                             
+//                      DFQ + Kurven (IF 4166) gemeinsam
+//                      am IF beachten: DFQ:  QDAS_C1_OP036_Prg09_2013-11-14_09-25-19_.dfq  /  CSV:  Meas_C1_OP036_Prg01_2013-09-18_08-14-12_.csv
+//--- 20140115_js:    VS 7 OnAfterLoad3DImportHeader V1.36:
+//                      bitte um Erweiterung des Importscripts für das neu angelegte IF # 4171 (PAC-VAP_Prismo5_Calypso)             
+//                      Genau gleich wie IF # 4149 (PAC-VAP_Calypso), jedoch soll der Auftrag aus Kombination Sach-Nr. und Prüfplan gebildet werden.
+//                      Bitte die Leerzeichnen im Indexbereich des Auftrags entfernen, sonst gibt es mit dem 40 stelligem Auftrag Probleme:
+//                      Also so: A2053322100_VAP_AS20521_LI_SW_OP10-20/1 Nicht: A2053322100_VAP_AS20521_LI_SW_OP10-20 / 1
+//                      Die Stammdaten müssen bei dieser Bsp.datei so gebildet werden:
+//                      Teil= A2053322100, Prüfplan= VAP_AS20521_LI_SW_OP10-20, Vorgang= Endkontrolle_SERIENPRÜFUNG_KMG, Auftrag= A2053322100_VAP_AS20521_LI_SW_OP10-20/1
+//                      Ticket:  0023229046
+//                      Korrekturen im generischen Teil, der für alle IFs durchlaufen wird, da Auftragsbildung von der Norm abweicht.
+//--- 20140526_ab:    VS 7 OnAfterLoad3DImportHeader V1.37: PRE: SPC MQS für H.Ritzmann integriert
+//--- 20140718_ab:    VS 7 OnAfterLoad3DImportHeader V1.38: nur einen Kommentar bei IF 23, 4113, 4123 eingefügt
+//--- 20141112_ab:    VS 7 OnAfterLoad3DImportHeader V1.39.2: Prüfplankorrektur für GPA /Klingelberg (IF 3) für H.Kansy
+//                    - mit neuem Katalog  "Pruefplan_Pruefplan_Zuordnung_GPA"
+//                    - mit neuer Funktion "PruefplanPruefplanGet"
+//                    => Hintergrund: im ALU-HAG falsche Prüfplannamen auf Werth und Klingelnberg hinterlegt
+//                       "TR_HAG183..._i=3.07" =>        "TR_ALU-HAG183_i=3.07"
+//                                                                                                             
+//--- 20141205_pk:    Nach QDA9 migriert (ASI Datamyte) 
+//--- 20150304_ab:    VAP Calypso IF 4149: Auftragsnummer = SNR+PP-Name, wg. Auftrag schon vorhanden (H.Lesch)
+//                    => Radträger werden in Halle9 und Halle11 gefertigt. Problem trat mit Calypso VAP Halle11 auf
+//                    => K1209 UZ ist nicht gefüllt: vorläufig mit Default = Serie befüllen 
+//--- 20150316_ab:    ACM Accura RT Calypso IF 4123 + VAP Prismo1+4 IF 4149: Auftragsnummer = PP-Name (SNR im PP schon enthalten), wg. Auftrag schon vorhanden (H.Lesch)
+//                    => Radträger werden in Halle9 und Halle11 gefertigt. Problem trat mit Calypso VAP Halle11 auf 
+//--- 20150427_ab:    V2.3: neues IF 4176 für Import von QDA-DFQ-Export                                                
+//--- 20150925_ab:    V2.4: wg. QS-Torque und Sonderfall für PP: "HAG200/215/240_GPA_UNI-S/HAG200/215/240": Fehler im Importpuffer: Aft-Nr schon vorhanden
+//                          QDA zeigt im Importpuffer links die Aft-Nr. mit Leerzeichen, rechts ist die Aft-Nr leer, weil beim Anlegen
+//                          des Auftrags das Blank wegenommen wird. Dann kommt die Fehlermeldung: Auftrag bereits vorhanden.                      
+//                          Ursache:
+//                          nach der CCL-Abfrage sieht die Aft-Nr so aus: "HAG200/215/240_GPA_UNI-S/HAG200/215/240 /"  => Vorsicht: 41 Zeichen
+//                          Order := TrimRight (Order)    => bringt nichts, da am Ende ein "/" steht   Der CCL-Part darüber zaubert ein Leerzeichen ans Ende.
+//                          => deshalb nach CCL-Abfrage nochmal SOnderbehandlung für QS-Torque und die Blanks nochmal raus 
+//--- 20151211_js:     V2.5:  Implementierung KMG-DFQ-Dateien Weiterleitung an PLA mit IF: 4123  
+//--- 20160322_js:     V2.6:  In BeforeOpenFile für IF4123 (PLA-Weiterleitung)    
+//                            * Erweiterung:  -  DFQ-Dateien nur weiterleiten, wenn TeileIdent in K0014 vorhanden
+//--- 20160509_aboeg   V2.7:  in BeforeOpenFile: fehlendes CRLF ersetzen: DFQ-IF liest sonst fehlerhaft ein !  (Bsp: PAC: SFE-ITG-MRA-Kopplungen) 
+//                            Alternative: IF: Reiter qs-STAT: Häkchen setzen: "K00xx als Kopfzeilen ignorieren"
+//--- 20160511_js:     V2.8:  Korrektur-Methode für fehlende CRLF am Dateiende bei DFQ-Dateien (performantere Version)
+//--- 20160530_aboeg:  V2.9:  IFs für Claas aufgetrennt wg. Stpr-Info: NEU: 4178 = ITG MRA205/X253 / ALT: 4118 
+//--- 20160629_aboeg:  V2.10: IF 4180 für Zeiss Contour integriert 
+//                            Werth: in K1203 = "SPC " war plötzlich ein Blank hinten dran. Führt im Importpuffer zu Fehlermeldung, dass Vorgang schon vorhanden 
+//                              => DeleteSpaces ganz allgemein bei K1203 eingebaut
+//--- 20160713_aboeg:  V2.11: IF 4181 NEU für Verlagerung ZS Hochrainer 1 nach PAC-Mon mit parallelem Einlesen DFQ in PAC-Fert
+//--- 20160919_aboeg:  V2.12: IF 3/15 + 4180: OrderBelegung := 'AftNr_ist_Part+Checkplan'; 
+//--- 20161109_aboeg:  V2.13: IF 4182: Import QDA-DFQ-Exports für AS213 (Marcel Runck)
+//--- 20170327_aboeg:  V2.14: 1) Werth/Klingelnberg: Jungk/Kansy: Schweinkram: Aft-Nr ist in DFQ-TeileIdent Pos 1-5, Bsp: 47114-16345
+//                               !!!!!!!!!!!!!!!!! richtige Parameter-Belegung in IF-Abfrage noch implementieren !!!!!!!!!!!!!!!
+//                               !!!!!!!!!!!!!!!!! und richtig testen, da etwas Schweinkram
+//                               21.06.2017: WIRD NICHT MEHR GEBRAUCHT. Mehr eine Sofortlösung, die nie zum Einsatz kam
+//                                           => Aft-Nr jetzt in K0053 !
+//                            2) WP Welding Expert IF 4183 (ASP Fr. Erika Zimmermann) integriert => Aft-Nr in K1053 => ADM
+//--- 20170621_aboeg:  V2.15: 1) Werth/Klingelnberg: Jungk/Kansy: Aft-Nr. jetzt in K0053 => Orderbelegung = ADM
+//--- 20171113_aboeg:  V2.16: IF 4184 PAC/PRE SPC_Renishaw analog 4172 PAC/PRE SPC_MQS für Peter Ritzmann angelegt.
+//                            Unterschied: Toleranzen sind relativ !
+//                            IF in if-Zweig 4172 ergänzt
+//--- 20171130_aboeg:  V2.17: Neu: IF 4185: IF 4118 "PAC/SFE Claas ITG212/231/HAT246 DFQ" aufgetrennt: für HAT246 neues IF wg. Abstellen Plausi
+//                                 IF 4185: "PAC/SFE Claas ITG212/231 DFQ": Wunsch Uwe Klemm: Tol-Plausi kufri abgestellt
+// --- 20171201_wfiur: V2.18: IF 4119 QS-Torque nach SW-Änderung der Schlüssel: "K1209  Serie" ( mit 2 Blanks )
+//                            Für Quartals-Auswertung wird vorheriger Vorgang (mit 1 Blank) benötigt
+//--- 20171214_aboeg:  V2.19: KMG-Datenweiterleitung_PLA: Erweiterung auf VAP_Prismos: RT + AS
+//                            IF: 4123 (Accura) (HA/RT) + 4149 (PAC-VAP_Calypso) + 4171 (PAC-VAP_Prismo5_Calypso) (VA/AS + HA/RT)  (Test-IF: 5000)  
+//                            VA/AS : Axxx332yyyy
+//                            HA/RT : Axxx357yyyy  
+//                            => K0014 kommt doppelt vor: K0014 + K0014/0: ob beide Felder belegt sind: unklar: CheckK0014 evtl auf K0014/0 ändern !!!!!!!!!!!!!!!!!
+//--- 20180102_aboeg:  V2.20: KMG-Datenweiterleitung_PLA: Erweiterung auf VAP_Prismos: RT + AS
+//                            => try ... end implementiert
+//--- 20180118_aboeg:  V2.21: KMG-Datenweiterleitung_PLA: Erweiterung auf VAP_Prismos: RT + AS
+//                            * beim direkten Import ausd em Importpuffer wurde der Grundpfad falsch zusammengestellt:
+//                              -> KMG-Pfad\NOT_IMPORTED\QDA_Out_PLA...
+//                            * Den direkten Import aus dem Importpuffer kann man ignorieren, da die Datei beim Erstimport 
+//                              schon an die PLA weitergeleitet wurde
+//--- 20180122_aboeg:  V2.22: IF 4116 (PAC/GFA Radflansch Hafner+Komeg): OrderBelegung := 'AftNr_ist_Part+Checkplan';
+//                            * IF: auf "Auftrag automatisch anlegen" gestellt, damit man nicht alle Aufträge neu anlegen muss
+//----20180213_jp:     V2.23: IF4186 (PGS)=4142
+//--- 20180118_aboeg:  V2.24: KMG-Datenweiterleitung_PLA: Erweiterung RT + AS / nur Serie => Einstellmessungen nicht weiterleiten
+//--- 20180301_aboeg:  V2.25          Auftragsnummer zu lang: IF 4118: ITG auch in DeleteSpaces reingenommen
+//--- 20180302_Motzke/JS:  V2.26  Implementierung ANA-FSK mit IF 5003
+//--- 20180507_js:     V2.27 InterfaceCfgNo = 5003 von DeleteSpaces-Standardbehandlung ausgeschlossen.  (ab Z.1204) 
+//--- 2018xxxx_Q-Sol   V2.xx Diverse, nicht dokumentierte Erweiterungen für IQ-PRO2
+//--- 20181030_aboeg:  V2.28 Komeg Radflansch IF 5005: Integration zu IF 4116 I
+//--- 20190110_aboeg:  V2.29 ITG MRA2 (223) IF 5009: Einlesen Ergebnisse von Fa.Aumann
+//--- 20190114_aboeg:  V2.30 GPA Radsatz Gleason IF 5001
+//--- 20190116_aboeg:  V2.31: IF 5010: Zeiss Prismo integriert (Adrian Kansy)
+//--- 20190304_aboeg:  V2.32: IF 5001: GPA Radsatz Gleason: OrderBelegung := 'AftNr_ist_PP'; (Adrian Kansy)  // SNR+PP war zu lang
+//--- 20190404_aboeg:  V2.33: IF 5012: RT Marposs SPC (case: 23, 4113)
+//--- 20190412_aboeg:  V2.34 ITG MRA2 (223) IF 5009: Einlesen Ergebnisse von Fa.Aumann: 
+//                           => feste Vorgaben bis auf PP wieder raus, da Stammdaten von Messmaschine fast IO
+//--- 20190524_aboeg:  V2.35: HAT IF 4109: Stpr-Infos in der Messwertezeile: ab R9M15 verschiebt sich alles um 1, 
+//                                         da das Ereignis an Stelle 1 jetzt gesondert ausgewertet wird
+//--- 20190626_aboeg:  V2.36: * IF 4142: Zeiss/Calypso: Fehler korrigiert, dass Prefix_Checkplan auch aus K1101 genommen wird
+//                              Varianten ohne K1101, "K1101" und "K1101 " auch berücksichtigt
+//                            * IF 5009: ITG Aumann: PP-Vorbelegung raus. War wg. ersten Testdaten drin
+//--- 20190708_aboeg:  V2.37: e-mail-Versand bei Tol-/EGG-Verletzern (
+//                            !!!!!!!!!!!!!!! => noch nicht getestet und aktiv
+//                            => wenn dieser Stand fortentwickelt werden muss, 
+//                               einfach "procedure OnAfterSaveSample" auskommentieren
+//--- 20190723_aboeg:  V2.38: e-mail-Versand bei Tol-/EGG-Verletzern
+//                            > Kostenstellenabhängige e-mail-Verteiler eingeführt
+//--- 20190830_aboeg:  V2.39: HAT/ITG 223 / Aumann/Claas: IF 5017 ergänzt
+//--- 20190902_aboeg:  V2.40: e-mail-Versand bei Tol-/EGG-Verletzern überarbeitet
+//--- 20190909_aboeg:  V2.41: e-mail-Versand bei Tol-/EGG-Verletzern überarbeitet:
+//                            * Kostenstellenverteiler auf die Monatsbericht-Verteiler angepasst
+//                            * CRLF zur besseren Übersicht eingebaut
+//--- 20190927_benweil: V2.42:    IF5018 ergänzt inkl. Sonderbehandlung: aus K1103 muss Kostenstelle, Maschine  und EQ rausgezogen werden
+//--- 20191010_aboeg:   V2.43:* Prismo-VAP4: IF 4149: AUfrtagsbildung = SNR + PP wg. Umstellung Programmstruktur 
+//--- 20191202_aboeg:   V2.44: e-mail-Versand bei Tol-/EGG-Verletzern überarbeitet:
+//                             neue Logik eingebaut, da in einem Telegramm sowohl EGG- als auch Tol-Verletzer vorkommen können
+//                             1) betroffene Merkmale in einer Variablen sammeln und Merker setzen
+//                             2) Kostenstellenverteiler bestimmen
+//                             3) e-mail-Text mit gesammelten Merkmalen versorgen und verschicken
+//--- 20200114_aboeg:   V2.45: e-mail-Versand bei Tol-/EGG-Verletzern überarbeitet:
+//                             => zusätzliche Ausgabe Istwert pro Merkmal
+//--- 20200715_aboeg:   V2.46: interimsmäßig neues IF 5014 PAC-FMR_Calypso parallel zu IF 4142 PAC-ZMR_Calypso eingerichtet
+//                             => Streitpunkt: ZMR-IF: hat die Maschine auf K1082 => Strp-Info 12 (Prod-MaschBez / Lieferant-Gusskn)
+//                                                     - K1081 (Masch) wahrscheinlich leer
+//                                             FMR-IF: K1082 => Strp-Info 2 / Stpr-Info 12
+//--- 20200811_aboeg:   V2.47: AuftragsNr länger als 40 Zeichen: wenn am Ende ein Leerzeichen übrigbleibt, wird der Auftrag von QDA ohne das Leerzeichen angelegt.
+//                             Der Importpuffer bleibt dann beim nächsten Einlesen immer Hängen
+//                             Prismo_P4 (IF 4142) OrderBelegung := 'ZMR_DT': "A24637220245320_ZMR_alt24620_a_Sonder / "
+//                                                 TrimRight =>               "A24637220245320_ZMR_alt24620_a_Sonder /" => hat nicht getan !!!
+//                             => kufri mit DeleteSpaces gelöst aber wieder deaktiviert, weil sonst alle Aufträge neu ohne Leerzeichen gebildet werden
+//                             => Yunhua nach der Funktion TrimRight gefragt
+//--- 20201001_benweil: V2.48: Interface EVA2 Tragrahmen Hafner & Apex & Kistler ergänzt analog MQS (4172). Interface-Nr 5021, 5022, 5023
+//--- 20201102_aboeg:   V2.49: Interface ITG 297 EVA2:  neues Interface-Nr 5024
+//--- 20201105_aboeg:   V2.50: Interface HAT 297 EVA2:  neues Interface-Nr 5020
+//--- 20210422_benweil: V2.51: Interface 5022 Prüfplan nicht auf Teil setzen sondern über Interfacekonfig K1002
+//--- 20210512_benweil: V2.52: 5025, 5026 ergänzt (EVA2 TRR CSV Interfaces Kistler & Apex)
+//--- 20210901_jhavril: V2.53: erweitert um Einlesen der ZDC:Prisma Tabelle für ITG_BR223
+//===========================================================================================================================================================
+//uses
+  //BLEndkontrolle_Rek;
+const
+//#roe100317 {                                                    
+  SkriptNummer = 10028;                                                          
+  cOrderArt1   = '1'; //PGE, "Part_Checkplan / ?"
+  cOrderArt2   = '2'; //ZMR, "Order / ?"
+  cOrderArt3   = '3'; //NVM  "Part / ?"
+  //Order := CallScriptMethod('GetOrder', 1, SkriptNummer, [cOrderArt3,Checkplan,Part,Order]);            //#roe091117
+//#roe100317 }
+                                                                                           
+  // TRUE          = 0;        // ABOEG: Patrick Krause: muss bei QDA9 raus, sonst funktionieren die IF-Abfragen nicht mehr
+  // FALSE         = 1;        // ABOEG: Patrick Krause: muss bei QDA9 raus, sonst funktionieren die IF-Abfragen nicht mehr
+  PREFIX_GFA    = 'GPA_';
+  PREFIX_SWP    = 'SWP_';
+  PREFIX_ACH    = 'ACM-';
+  PREFIX_ACH_HA = 'ACM-HA_';
+  PREFIX_ACH_VA = 'ACM-VA_';//bö am 12.08.10                                               
+  PREFIX_VAP    = 'VAP_';   //mm am 070706                                      
+  PREFIX_BS     = 'BS_';    //bö am 301006
+  PREFIX_SFE    = 'SFE_';   //mm am 29.11.06
+  PREFIX_PRE    = 'PRE_';   //jk am 05.06.2008
+  PREFIX_ZMR    = 'ZMR_';   //jp am 18.02.2010
+  //SachNr_Pruefplan_Zuordnung
+  SA_CODE_NICHT_VORHANDEN         = 'SA-Code nicht vorhanden';
+
+    // Konstanten für GetPartFromImportFile
+  TEIL_COPY_START_POS         = 1;
+  TEIL_COPY_START_POS_2       = 2;           // bei Vormontagen hat die Teile-ID eine führende "1"
+  TEIL_COPY_LENGTH            = 10;          
+  COLUMN_SEPARATOR_MFA_KURVEN = ';';
+  KFELD_TEILENUMMER           = 'K0014';
+  KFELD_TEILENUMMER_0         = 'K0014/0';   
+  KFELD_TEILENUMMER_1         = 'K0014/1';   
+
+  //--- Pfade
+  MOVE_PATH_IGNORED_ZS_MELDUNG         = '_IMPORTED_IGNORED_ZS_MELDUNG';
+  MOVE_PATH_PROCESSED_ZS_START_MELDUNG = '_IMPORTED_PROCESSED_ZS_START_MELDUNG';
+
+  cNichtBelegt = '!NICHT_DEFINIERT!'; //#roe100323
+  cDB = 'QDA8'; //#roe100323  
+
+   //---E-Mail Versand bei Tol-/ Eingriffsverletzer---------   // V2.37
+  THIS_SCRIPT_NAME = 'Ut/PAC Tools';  
+  // cQDAVerteilerNameTE1864 = 'DS__Tol_EGG_Verletzer_1864';       // V2.38
+  // cQDAVerteilerNameTE1984 = 'DS__Tol_EGG_Verletzer_1984';       // V2.38
+  // cQDAVerteilerNameTE1994 = 'DS__Tol_EGG_Verletzer_1994';       // V2.38
+  // cQDAVerteilerNameTE6314 = 'DS__Tol_EGG_Verletzer_6314';       // V2.38
+  cQDAVerteilerNameTE1864 = 'DS_Monat/Tol_EGG_Verletzer-1864';       // V2.41
+  cQDAVerteilerNameTE1984 = 'DS_Monat/Tol_EGG_Verletzer-1984';       // V2.41
+  cQDAVerteilerNameTE1994 = 'DS_Monat/Tol_EGG_Verletzer-1994';       // V2.41
+  cQDAVerteilerNameTE6314 = 'DS_Monat/Tol_EGG_Verletzer-6314';       // V2.41
+  cQDAVerteilerNameTEoKST = 'DS_Monat/Tol_EGG_Verletzer____ohneKST'; // V2.41  // 2.45
+  // DS_Monat/Tol_EGG_Verletzer-1864
+  // cQDAVerteilerNameTE = 'DS__Tol_EGG_Verletzer';
+  // cQDAVerteilerNameE  = 'DS__EGG_Verletzer'; 
+  // cQDAVerteilerNameT  = 'DS__Tol_Verletzer';
+  cAbsenderName = 'QDA-System';
+  cAbsenderMail = 'noreply@daimler.com';     
+  // Das ! wir im SQL Escaped, da '_' unter Oracle ein Platzhalterzeichen
+  cMerkmalBezFilter = '%P!_%DP0-Md%';
+  CRLF = #13#10;      
+  AC_CHAR = 'M';
+  //------------------------------------------------
+  
+//Variable für InterfaceNr
+var                                                                                                                                           
+  InterfaceNr     : Integer;
+  quPZweck        : TQuery;
+  UZ              : string;          //Untersuchungszweck
+  tmp_OP          : string;
+  KostenStelleCSV : string;
+  OrderBelegung:    string;          // V2.14: damit OrderBelegung in OnGetSampleInfoDateTime verfügbar ist
+var
+  PPschonZugeordnet: Integer;        // 09.07.13, ABOEG: Hilfsvariable wg. SWP Frenco Funktion: PruefplanZuSaCodeGet nur beim 1.Mal aufrufen.
+                                     // Checkplan wird beim 1.Mal geaendert. Es wird nicht wie sonst ueblich ueber die SNR gesucht.
+                                     // Beim 2.Mal findet die Funktion dann nichts mehr.
+  gstrIdentForITG : string;          // 02.09.21, JHAVRIL: global fuer OnGetSamplinfoDateTime   (analog in TC gstrIdentForSpindel)
+  
+  ExcludeFromIFHandling : boolean; 
+
+//--- forwards
+procedure AfterImport(aFilname, aPath: String; aPrfNr: Integer); forward;
+//function  GetSamleInfosFromZDCPrisma(aIdent: String; var aMaschine, aSchritt, aVorrichtung: String): Boolean; forward;
+//procedure UpdateSample(aID, aMaschine, aSchritt, aVorrichtung: String); forward;
+function  KatalogSaEntryInsert(strSACode: string; strSachNr : string; strBaureihe : string): Boolean; forward;
+function  KatalogSaEntryExist(strSACode: string; strSachNr : string): Boolean; forward;
+function  PruefplanZuSaCodeGet(strSachNr : string) : string; forward;                     
+function  PruefplanPruefplanGet(strPruefplan : string) : string; forward;
+procedure SaCodeVerarbeiten(strCode:string; strSachNr : string; strBaureihe : string); forward; 
+function  GetKFeld1001FromDatei(datenDatei : string) : string; forward;
+function  GetKFeld1002FromDatei(datenDatei : string) : string; forward;
+function  GetKFeld1209FromDatei(datenDatei : string) : string; forward;
+function  CheckK0014Presence(datenDatei : string) : boolean; forward;
+function GetPartFromImportFile(aFilename: String; StartPos: Integer): string; forward;
+//Procedure AfterImport(aFilename: String; aMovedToPath: String; aPrfNr: Integer);
+//begin
+//  if (D3ImportHeader.InterfaceCfgNo = 666) OR 
+//           (D3ImportHeader.InterfaceCfgNo = 2000) then
+//  begin
+//      BLEndkontrolle_Rek.CreatePLAandComplaint(Vorgangstyp_Reklamation_SPC, aPrfNr, xtMessen);
+//  end;
+      
+//end; 
+
+//---------------------------------------------------------------------------- 
+function InStr(Start: integer; Source: string; SourceToFind: string): integer;
+ //--- Hilfsfunktion für PLA-XML Import                                                                    
+ begin                                                                                                                                                                  
+  Result := pos(SourceToFind,copy(Source,Start,Length(Source) - (Start - 1)));
+ end;
+//----------------------------------------------------------------------------
+//--- Hilfsfunktion für PLA-XML Import
+function Replace(sData: String; sSubstring: String; sNewsubstring: string): String;
+var
+   n: integer;
+   lSub: Longint;
+   lData: Longint;
+begin
+     n := 1;
+     lSub := Length(sSubstring);
+     lData := Length(sData);
+     repeat
+       begin
+         n := InStr(n, sData, sSubstring);
+         If n = 0 Then
+         begin
+           sNewSubString := sData;
+           Result := sData;
+           Exit
+         end
+         Else
+          sData := Copy(sData, 1, n - 1) + sNewsubstring + Copy(sData, n + lSub, lData);
+          n := n + lSub;
+         End;
+      Until n > lData;
+      //Replace := sData;
+      Result := sData;
+end;           
+//----------------------------------------------------------------------------
+//--- Funktion zum Löschen von Leerzeichen in einer Zeichenkette
+//function DeleteSpaces(InWert: string): string;
+//begin
+// while Pos(' ', InWert) > 0 do
+//  InWert := Copy(InWert, 1, Pos(' ', InWert) - 1) + Copy(InWert, Pos(' ', InWert) + 1, Length(InWert));
+// Result := InWert;
+//end;
+
+//----------------------------------------------------------------------------
+//--- Funktion ersetzt Leerzeichen durch einen Underline
+//function ReplaceSpaces(InWert: string): string;
+//begin    
+// while Pos(' ', InWert) > 0 do
+//  InWert := Copy(InWert, 1, Pos(' ', InWert) - 1) + '_' + Copy(InWert, Pos(' ', InWert) + 1, Length(InWert));
+// Result := InWert;
+//end; 
+                                  
+//----------------------------------------------------------------------------
+function LeftPadCh(S: string; Ch: Char; Len: Integer): string;
+var
+  i: Integer;
+begin
+  Result := s;
+  for i := Length(s) + 1 to len do
+    Result := ch + Result;
+end;
+//----------------------------------------------------------------------------
+//--- Funktion holt UZ aus Katalog Auftragsschlüssel
+function GetAuftragschluessel(InUZ: string): string;
+   begin             
+     quPZweck := TQuery.Create(nil);
+     quPZweck.Databasename := 'QDA8';
+     quPZweck.SQL.Add('select * from STDKATALOGDETAIL');
+     quPZweck.SQL.Add('where KATALOG = :katname');
+     quPZweck.SQL.Add('and KATALOGDETAIL = :katdetail');
+     quPZweck.ParamByName('katname').asString := 'Auftragsschlüssel';
+     quPZweck.ParamByName('katdetail').asString := InUZ;
+     quPZweck.Open;
+     UZ := quPZweck.FieldByName('KFELD01').asString;
+     UZ := AnsiUpperCase(UZ);
+     quPZweck.Close;
+     quPZweck.Free;
+     If(length(UZ) < 1) then UZ := '???';
+     Result := UZ;
+   end; 
+//----------------------------------------------------------------------------    
+//Funktion zum Löschen von Leerzeichen in einer Zeichenkette
+//Parameter: String
+function DeleteSpaces(InWert: string): string;
+begin
+ InWert := trim(InWert);                                        
+ while Pos(' ', InWert) > 0 do
+  InWert := Copy(InWert, 1, Pos(' ', InWert) - 1) + Copy(InWert, Pos(' ', InWert) + 1, Length(InWert));
+ Result := InWert;
+end;
+//----------------------------------------------------------------------------         
+//Funktion ersetzt Leerzeichen durch einen Underline
+//Parameter: String
+function ReplaceSpaces(InWert: string): string;
+begin
+ InWert := trim(InWert);
+ while Pos(' ', InWert) > 0 do
+  InWert := Copy(InWert, 1, Pos(' ', InWert) - 1) + '_' + Copy(InWert, Pos(' ', InWert) + 1, Length(InWert));
+ Result := InWert;
+end;
+//----------------------------------------------------------------------------   
+//Funktion zum Löschen von Underlines in einer Zeichenkette
+//Parameter: string
+function DeleteUnderlines(InWert: string): string;
+begin
+ while Pos('_', InWert) > 0 do
+  InWert := Copy(InWert, 1, Pos('_', InWert) - 1) + Copy(InWert, Pos('_', InWert) + 1, Length(InWert));
+ Result := InWert;
+end;
+//----------------------------------------------------------------------------   
+//Funktion holt Eintrag aus Katalog
+//Parameter 1: String (Nummer die im Katalog aufgelöst werden soll)
+//Parameter 2: String (der zu verwendende Katalog)
+function GetKatalog(InUZ: string; InKat: string): string;
+var
+     UZ : string;
+     quPZweck : TQuery;
+begin
+  InUZ := trim(InUZ);
+  quPZweck := TQuery.Create(nil);
+  UZ := cNichtBelegt; //#roe100323
+  try
+    quPZweck.Databasename := cDB;
+    quPZweck.SQL.Add('select * from STDKATALOGDETAIL');
+    quPZweck.SQL.Add('where KATALOG = :katname');
+    quPZweck.SQL.Add('and KATALOGDETAIL = :katdetail');
+    quPZweck.ParamByName('katname').asString := InKat;
+    quPZweck.ParamByName('katdetail').asString := InUZ;
+    quPZweck.Open;
+    if not (quPZweck.Bof and quPZweck.Eof) then //#roe100323
+       UZ := quPZweck.FieldByName('KFELD01').asString;
+    UZ := uppercase(UZ);
+    If(length(UZ) < 1) then UZ := cNichtBelegt; //#roe091021
+    quPZweck.Close;
+  finally
+    quPZweck.Free;
+  end;
+  Result := UZ;
+end;
+//---------------------------------------------------------------------------- 
+//Funktion zum Löschen von Leerzeichen in einer Sachnummer
+function DelSpacesSNR(InWert: string): string;
+begin
+  if (InWert[1]='A') or (InWert[1]='R') then begin
+     while (Pos(' ', InWert) > 0) do begin
+            if (InWert[Pos(' ', InWert) + 1] = ' ') and (InWert[Pos(' ',InWert) + 2] <> ' ') then
+              break
+            else
+              InWert := Copy(InWert, 1, Pos(' ', InWert) - 1) + Copy(InWert, Pos(' ', InWert) + 1, Length(InWert));
+     end
+  end else begin
+     while (Pos(' ', InWert) > 0) do
+      InWert := Copy(InWert, 1, Pos(' ', InWert) - 1) + Copy(InWert, Pos(' ', InWert) + 1, Length(InWert));
+  end;
+
+Result:= InWert;
+end;
+//---------------------------------------------------------------------------- 
+//================================================================================================
+// ADM Funktionen
+function IsMaster(InOrder: string): boolean;
+var
+  Kennung : string;                                             
+begin
+  Kennung := 'MST';
+  If (Pos(Kennung, InOrder) = 1) then
+        Result := True
+  else
+        Result := False;
+end;
+//----------------------------------------------------------------------------  
+function CheckMaster(InMaster: string): boolean;                                                      
+var
+     quPZweck : TQuery;
+     OrderName : String;
+begin
+  InMaster := trim(InMaster);
+  quPZweck := TQuery.Create(nil);
+  try
+    quPZweck.Databasename := cDB;
+    quPZweck.SQL.Add('select * from STDAUFTRAG');
+    quPZweck.SQL.Add('where AUFTRAG = :mastername');
+    quPZweck.ParamByName('mastername').asString := InMaster;
+//    showmessage('SQL ' + quPZweck.SQL.GetText);
+    quPZweck.Open;
+    Result := false; //#roe100323
+    OrderName := ''; //#roe100323
+    if not (quPZweck.Bof and quPZweck.Eof) then  //#roe100323
+    begin
+       OrderName := quPZweck.FieldByName('Auftrag').asString;
+       Result := true; //#roe100323
+    end;
+    quPZweck.Close;
+
+  // Warum "<4" ?                                                                                                                        
+  If Length(OrderName) < 4 then                        
+          Result := false
+  else
+        Result := true;                                                                                                                          
+
+  finally
+    quPZweck.Free;
+  end;
+
+end;
+//---------------------------------------------------------------------------- 
+//function GetOrder(InMaster: string): string;  //#roe090921
+function GetOrderADM(InMaster: string): string; //#roe090921
+var
+     quPZweck : TQuery;
+     OrderName : String;
+begin
+  InMaster := trim(InMaster);
+  quPZweck := TQuery.Create(nil);
+  OrderName := cNichtBelegt; //#roe100323, Konstante eingeführt
+  try
+    quPZweck.Databasename := cDB;
+    quPZweck.SQL.Add('select * from STDAUFTRAG');
+    quPZweck.SQL.Add('where AFELD30 = :ordername');
+    quPZweck.SQL.Add('and STATUS in (2,5,6)');
+    quPZweck.SQL.Add('order by AUFTRAG');
+    quPZweck.ParamByName('ordername').asString := InMaster;
+    quPZweck.Open;
+    if not (quPZweck.Bof and quPZweck.Eof) then //#roe100323
+       OrderName := quPZweck.FieldByName('Auftrag').asString;     
+    quPZweck.Close;
+//    showmessage('Ergebnis:'+OrderName+'!!!!!!');
+//    showmessage('SQL ' + quPZweck.SQL.GetText);
+  finally                        
+    quPZweck.Free;
+  end;
+  Result := OrderName;
+end;
+//---------------------------------------------------------------------------- 
+ function GetKFeld(aZeile: string; aKFeld: string): string;
+ var Feld: string;
+ begin
+   Feld:='';
+   if Pos(aKFeld, aZeile) > 0 then
+   begin
+     Feld := Copy(aZeile, Pos(' ', aZeile) + 1, Length(aZeile));
+     Feld := trim(Feld);
+     Feld := DeleteSpaces(Feld);
+     Feld := uppercase(Feld);
+     If(length(Feld) < 1) then Feld := cNichtBelegt;
+   end;
+   Result := Feld;
+ end;
+//----------------------------------------------------------------------------     
+ function GetQsstatUZ(aZeile: string; aKFeld: string; aKatalog: string): string;
+ var qsstat_uz: string;
+ begin
+    // Untersuchungszweck
+    qsstat_uz:='';
+    if Pos(aKFeld, aZeile) > 0 then
+    begin
+         qsstat_uz := Copy(aZeile, Pos(' ', aZeile) + 1, Length(aZeile));
+         qsstat_uz := trim(qsstat_uz);
+         qsstat_uz := DeleteSpaces(qsstat_uz);
+         qsstat_uz := GetKatalog(qsstat_uz, aKatalog);
+         qsstat_uz := uppercase(qsstat_uz);
+         If(length(qsstat_uz) < 1) then qsstat_uz := cNichtBelegt;
+    end;
+    Result := qsstat_uz;
+end;
+//----------------------------------------------------------------------------  
+//// Rückgabewert nur mit Hilfe einer Funktion möglich ?
+//procedure GetSnrCPLfromOrder(const Order: string, var Teil:string, var Pruefplan:string);
+//var
+//     quSNRCPL : TQuery;
+//     CPLfromOrder : String;
+//begin
+//  Order := trim(Order);
+//  quSNRCPL := TQuery.Create(nil);
+//  Teil := '';
+//  Pruefplan := '';
+//  try
+//    quSNRCPL.Databasename := cDB;
+//    quSNRCPL.SQL.Add('select * from STDAUFTRAG');
+//    quSNRCPL.SQL.Add('where AUFTRAG = :ordername');
+//    quSNRCPL.SQL.Add('order by AUFTRAG');
+//    quSNRCPL.ParamByName('ordername').asString := Order;
+//    quSNRCPL.Open;
+//    if not (quSNRCPL.Bof and quSNRCPL.Eof) then                                     
+//    begin
+//      Teil := quSNRCPL.FieldByName('TEIL').asString;
+//      Pruefplan := quSNRCPL.FieldByName('PRUEFPLAN').asString;
+//      quSNRCPL.Close;
+//    end;
+//  finally;
+//    quSNRCPL.Free;
+//  end;
+//end;
+//}
+//----------------------------------------------------------------------------     
+//function GetOrder(Order: string, Part: string, Checkplan: string): string;                 //#roe091023
+function GetOrder(const Order: string; var Part: string; var Checkplan: string; const aArt: string): string; //#roe091023
+var CCL: integer;
+begin
+
+     //#roe090921 {                                                                             
+     if IsMaster(Order) then
+     begin
+          if CheckMaster(Order) then
+          begin
+              if GetOrderADM(Order) <> cNichtBelegt then
+                 Order := GetOrderADM(Order);
+          end;                                                                        
+     end;
+     //#roe090921 }
+
+     //#roe091008 {
+     // ADM-Auftrag, Part und Checkplan bestimmen
+     if (Pos('-',Order) = 5) then
+     begin
+     if (Pos('20',Order) = 1) then  //hjungk: 15.01.2020 war: "if (Pos('201',Order) = 1) then"
+       begin
+          //GetSnrCPLfromOrder(Order, PartOrg, CheckplanOrg); //#roe100323
+          Result := Order;
+          exit;
+       end;
+     end;
+     //#roe091008 }
+
+     // Prüfauftrag aus Part, Checkplan und ChechplanChangeLevel erstellen
+     //#roe091120, ganz neu {
+     CCL := GetCheckplanChangeLevel(Checkplan);
+     if Pos(' / ', Order) < 1 then //#roe091019
+     begin
+        if aArt='1' then   //PGE, "Part_Checkplan / ?"
+        if CCL > -1 then
+          Order := Part + '_' + Checkplan + ' / ' + IntToStr(CCL)
+        else
+          Order := Part + '_' + Checkplan + ' / ?';
+
+        if aArt='2' then  //ZMR, "Order /?"
+        if CCL > -1 then
+          Order := Order + ' / ' + IntToStr(CCL)
+        else
+          Order := Order + ' / ?';
+
+        if aArt='3' then //NVM, "Part / ?"
+        if CCL > -1 then                                        
+          Order := Part + ' / ' + IntToStr(CCL)
+        else
+          Order := Part + ' / ?';
+     end;
+     //#roe091120 }
+
+     Result := Order;
+
+end;
+//================================================================================================
+//hjungk, 22.03.2010
+// Ermittelt die im Auftrag eingegebene Sachnummer
+function GetSNRfromOrder(const Order: string): string;
+
+var
+     quSNR : TQuery;
+     SNRfromOrder : String;
+begin
+  Order := trim(Order);
+  quSNR := TQuery.Create(nil);
+  SNRfromOrder := cNichtBelegt;
+  try
+    quSNR.Databasename := cDB;
+    quSNR.SQL.Add('select * from STDAUFTRAG');
+    quSNR.SQL.Add('where AUFTRAG = :ordername');
+    quSNR.SQL.Add('order by AUFTRAG');
+    quSNR.ParamByName('ordername').asString := Order;
+    quSNR.Open;
+    if not (quSNR.Bof and quSNR.Eof) then
+      SNRfromOrder := quSNR.FieldByName('TEIL').asString;
+    quSNR.Close;
+
+  finally
+    quSNR.Free;
+  end;
+     Result := SNRfromOrder;
+end;
+//----------------------------------------------------------------------------  
+// Ermittelt den am Auftrag angegebenen Prüfplan
+function GetCPLfromOrder(const Order: string): string;   
+var
+     quSNR : TQuery;
+     CPLfromOrder : String;
+begin
+  Order := trim(Order);
+  quSNR := TQuery.Create(nil);
+ CPLfromOrder := cNichtBelegt;
+  try
+    quSNR.Databasename := cDB;
+    quSNR.SQL.Add('select * from STDAUFTRAG');
+    quSNR.SQL.Add('where AUFTRAG = :ordername');
+    quSNR.SQL.Add('order by AUFTRAG');
+    quSNR.ParamByName('ordername').asString := Order;
+    quSNR.Open;
+    if not (quSNR.Bof and quSNR.Eof) then    
+      CPLfromOrder := quSNR.FieldByName('PRUEFPLAN').asString;
+    quSNR.Close;
+       
+  finally
+    quSNR.Free;
+  end;
+     Result := CPLfromOrder;
+end;
+//----------------------------------------------------------------------------  
+//--- Erweiterung PLA-XML-SA-Code-Verarbeitung
+//------------------------------------------------------------------------------------
+procedure SaCodeVerarbeiten(strCode:string; strSachNr : string; strBaureihe : string);
+const
+   TOKEN_VL = 'VL';         // V222
+   TOKEN_VR = 'VR';         // V222
+   TOKEN_M5 = 'M005';       // V222
+   TOKEN_SA_CODE_NICHT_VORHANDEN = SA_CODE_NICHT_VORHANDEN  // HA EMO4_RT_KSM_PLA
+   TOKEN_NOT_FOUND = '???';
+   NULL_STRING = '';
+
+var
+   bolTokenFound : boolean;
+   bolDoInsert : boolean;
+   strToken : string;
+   strTest : string;
+
+begin
+
+   //Input-Zeile  <CODES>L   ,FR  ,487 ,B06 ,M279,M60 ,VL  </CODES>
+   // 1. Pruefe auf Instr(strCode, 'VL') >0
+   // 2. Pruefe auf Instr(strCode, 'VR') >0
+   // 3. Pruefe auf Instr(strCode, 'M005') >0
+   // 4. Start-Token gefunden
+   //    -> Katalogeintrag pflegen, wenn nicht im Katalog
+   // 5. Start-Token *nicht* gefunden
+   //    -> ignoriere XML - File, keine weitere Bearbeitung (war XML ohne <codes>-Knoten)
+   try
+      bolTokenFound := False;
+      strToken := NULL_STRING;
+
+      //--- exklusiv pruefen auf 'VL,VR,M005'-SA-Codes
+      If InStr(1,strCode, TOKEN_VL) > 0 then
+       begin
+           bolTokenFound := True;
+           strToken := TOKEN_VL;
+       end;
+
+      If InStr(1,strCode, TOKEN_VR) > 0 then
+       begin
+           bolTokenFound := True;
+           strToken := TOKEN_VR;
+       end;
+
+      If Instr(1, strCode, TOKEN_M5) > 0  Then
+       begin
+           bolTokenFound := True;
+           strToken := TOKEN_M5;
+       end;
+
+      If Instr(1, strCode, TOKEN_SA_CODE_NICHT_VORHANDEN) > 0  Then
+       begin
+           bolTokenFound := True;
+           strToken := TOKEN_SA_CODE_NICHT_VORHANDEN;
+       end;
+
+      //--- kein Token?
+      If Not bolTokenFound then
+            strToken := TOKEN_NOT_FOUND;
+
+      //--- Auswerten
+      Case bolTokenFound of
+
+         True:
+           begin
+              if not KatalogSaEntryExist(strToken, strSachNr) then
+                 KatalogSaEntryInsert(strToken, strSachNr, strBaureihe);
+             // else                                                                                       
+                // ;
+                 // Eintrag schon in Katalogtabelle
+                 // ignorieren, da nicht neu eingetragen werden muss
+
+                // TEST
+                //strTest :=  PruefplanZuSaCodeGet(strToken, strSachNr);
+
+           end; //---of case true
+
+         False:
+            begin
+               //;
+              //--- kein Token gefunden, diese XML-Datei wird ignoriert bzw. gemoved werden
+            end;
+
+        end; // of case
+
+   except
+       // ;                                   
+        //
+   end; // of try
+
+end; //-- of GetPruefplanZuSaCode  
+//----------------------------------------------------------------------------
+//--- liefert den Pruefplan zu einem bestimmten SA-Code
+function PruefplanZuSaCodeGet(strSachNr : string) : string;
+const
+    //TODO
+    cTEST = '';
+var
+   bolResult : boolean;
+   strResult : string;
+   qry : TQuery;
+begin
+ try
+   strResult := '???';
+   qry := TQuery.Create(nil);
+   with qry do
+    begin
+     try
+          bolResult := false;
+          qry.Databasename := 'QDA8';
+          qry.SQL.Add('select KFELD04 from STDKATALOGDETAIL');
+          qry.SQL.Add('where KATALOG = :katname');
+          qry.SQL.Add('and KATALOGDETAIL = :katdetail');
+          //qry.SQL.Add('and KFELD02 = :kfeld02');           //--- SachNr
+          qry.ParamByName('katname').asString := 'SachNr_Pruefplan_Zuordnung';
+          qry.ParamByName('katdetail').asString :=  strSachNr;
+          //qry.ParamByName('kfeld02').asString := strSACode;
+          qry.Open;
+          //strResult := Ergebnis_Prüfplan der manuell durch  PPLlaner eingepflegt wird.
+          strResult := qry.FieldByName('KFELD04').asString;
+          qry.Close;
+
+          //wenn Pruefplaner den PPLnamen noch nicht gepflegt hat ...
+          if strResult = '' then
+           begin
+             strResult := '???';
+             NewLogBookEntry(LOG_Fehler, 'PruefplanZuSaCodeGet', 'Fehler!', strSachNr + '- PPLAN fehlt.');
+           end; // of if
+     except
+        strResult := '???';
+        NewLogBookEntry(LOG_Fehler, 'PruefplanZuSaCodeGet', 'Fehler!', strSachNr + '-' + ExceptionMessage);    
+     end; // of t.ry
+                                                                              
+   end; // of w.th
+
+ finally
+     qry.Free;
+     Result := strResult;
+ end;
+
+end; //-- of func GetPruefplanZuSaCode      
+//----------------------------------------------------------------------------
+//--- liefert den Pruefplan zu einem bestimmten Pruefplan      // V1.39.2
+function PruefplanPruefplanGet(strPruefplan : string) : string;
+const
+    //TODO
+    cTEST = '';
+var
+   bolResult : boolean;
+   strResult : string;
+   qry : TQuery;
+begin
+ try
+   strResult := '???';
+   qry := TQuery.Create(nil);
+   with qry do
+    begin
+     try
+          bolResult := false;
+          qry.Databasename := 'QDA8';
+          qry.SQL.Add('select KFELD04 from STDKATALOGDETAIL');
+          qry.SQL.Add('where KATALOG = :katname');
+          qry.SQL.Add('and KATALOGDETAIL = :katdetail');
+          //qry.SQL.Add('and KFELD02 = :kfeld02');           //--- SachNr                           
+          qry.ParamByName('katname').asString := 'Pruefplan_Pruefplan_Zuordnung_GPA';
+          qry.ParamByName('katdetail').asString :=  strPruefplan;
+          //qry.ParamByName('kfeld02').asString := strSACode;
+          qry.Open;
+          //strResult := Ergebnis_Prüfplan der manuell durch  PPLlaner eingepflegt wird.
+          strResult := qry.FieldByName('KFELD04').asString;
+          qry.Close;
+
+          //wenn Pruefplaner den PPLnamen noch nicht gepflegt hat ...
+          if strResult = '' then
+           begin
+             strResult := strPruefplan;
+             NewLogBookEntry(LOG_Fehler, 'PruefplanPruefplanGet', 'Fehler!', strPruefplan + '- PPLAN fehlt.');
+           end; // of if
+     except
+        strResult := '???';
+        NewLogBookEntry(LOG_Fehler, 'PruefplanPruefplanGet', 'Fehler!', strPruefplan + '-' + ExceptionMessage);
+     end; // of try
+
+   end; // of with
+
+ finally
+     qry.Free;
+     Result := strResult;
+ end;        
+
+end; //-- of func GetPruefplanZuSaCode
+//----------------------------------------------------------------------------
+function KatalogSaEntryExist(strSACode: string; strSachNr : string): Boolean;
+var
+   qry : TQuery;
+   bolResult : boolean;
+begin
+  qry := TQuery.Create(nil);
+  try
+    bolResult := false;
+    qry.Databasename := 'QDA8';
+    qry.SQL.Add('select 1 from STDKATALOGDETAIL');
+    qry.SQL.Add('where KATALOG = :katname');
+    qry.SQL.Add('and KATALOGDETAIL = :katdetail');   // --- SachNr
+    qry.SQL.Add('and KFELD02 = :kfeld02');           //---
+    //qry.SQL.Add('and KFELD03 = :kfeld03');
+    //qry.SQL.Add('and KFELD04 = :kfeld04');
+    qry.ParamByName('katname').asString := 'SachNr_Pruefplan_Zuordnung';
+    qry.ParamByName('katdetail').asString :=  strSachNr;
+    qry.ParamByName('kfeld02').asString := strSACode;
+    //qry.ParamByName('kfeld03').asString := strBaureihe;
+    //try
+       qry.Open;
+    //except
+    //   ShowMessage(ExceptionMessage);
+    //end;
+    bolResult := Not (qry.BOF and qry.eof); //--- beides True wenn keine Daten gefunden
+    qry.Close;
+  finally
+    Result := bolResult;
+    qry.Free;
+  end;  //--- main try
+
+end; // of func KatalogSaEntryExist
+
+//----------------------------------------------------------------------------
+function KatalogSaEntryInsert(strSACode: string; strSachNr : string; strBaureihe : string): Boolean;
+var
+   qry : TQuery;
+   bolResult : boolean;
+begin
+  Result:=false;
+  qry := TQuery.Create(nil);
+  try
+    begin
+      try
+         bolResult := false;
+         qry.Databasename := 'QDA8';
+         qry.SQL.Add('Insert into STDKATALOGDETAIL ');
+         qry.SQL.Add('(katalog, katalogdetail, kfeld02, kfeld03)');
+         qry.SQL.Add('values (:katname, :katdetail, :kfeld02, :kfeld03)');
+         qry.ParamByName('katname').asString := 'SachNr_Pruefplan_Zuordnung';
+         qry.ParamByName('katdetail').asString :=  strSachNr;
+         qry.ParamByName('kfeld02').asString := strSACode;
+         qry.ParamByName('kfeld03').asString := strBaureihe;
+         //try
+           qry.ExecSql;
+         //except
+         //  ShowMessage(ExceptionMessage);
+         //end;
+         Result := True;
+     except
+         Result:=false;
+         //--- ExceptionMessage wirft Scriptfehler bei Syntaxpruefung, ignorieren!
+         NewLogBookEntry(LOG_Fehler, 'KatalogSaEntryInsert', 'Fehler!', ExceptionMessage);
+     end; //---of inner try
+    end;
+ finally
+    qry.Free;
+ end; //--- main try
+end; //--- of func KatalogSaEntryInsert
+
+{-----------------------------------------------------}
+// PLA: nur Dateien einlesen, die ZS_STATIONS_ERGEBNIS enthalten
+function GetNodeValueFromFile(aFileName, aNodeName: String): String;
+var
+  I: Integer;
+ Datei: TStringList;
+begin
+  Result := '';
+  Datei := TStringList.create;
+  try
+    Datei.LoadFromFile(aFileName);
+
+    for I := 0 to Datei.Count - 1 do
+    begin
+      if Pos('<' + aNodeName + '>', Datei.Strings[I]) > 0 then
+      begin
+        Result := Datei.Strings[I];
+        Result := Copy(Result, Length(aNodeName) + 3, Length(Result));
+        Result := Copy(Result, 1, Pos('</' + aNodeName + '>', Result) - 1);
+        Break;
+      end;
+    end;
+  finally
+    Datei.Free;
+  end;
+end;
+//------------------------------------------------------------
+// PLA: nur Dateien einlesen, die ZS_STATIONS_ERGEBNIS enthalten
+procedure MoveFile(aSourceFileName, aDestinationFolder: String);
+var
+  F: TextFile;
+  DestinationFileName: String;
+begin
+  // DestinationFileName := aDestinationFolder + '\' + ExtractFileName(aSourceFileName);  //ORIG
+  // DestinationFileName := ExtractFilePath(aSourceFileName) + '\' + MOVE_PATH + '\' + ExtractFileName(aSourceFileName);
+  DestinationFileName := ExtractFilePath(aSourceFileName) + '\' + aDestinationFolder + '\' + ExtractFileName(aSourceFileName);
+ // AssignFile(F, aSourceFileName);
+  try
+    RenameFile(aSourceFileName, DestinationFileName);
+  except                                                                  
+    //; 
+  end;
+end;
+//------------------------------------------------------------
+procedure CopyFileByStream(fromPath, toPath : string);                             
+var
+  mem : TMemoryStream;
+begin                                                                                                
+  try
+    mem := TMemoryStream.Create;                                                                
+    mem.LoadFromFile(fromPath);
+    mem.SaveToFile(toPath);    
+  finally
+    mem.Free;                                                                         
+  end;
+end;  
+//----------------------------------------------------------------------------
+function DateiKopieren(Quelle, Ziel: string; Ueberschreiben: Boolean): Boolean;
+begin                                                 
+  Result := CopyFile(Quelle, Ziel, not Ueberschreiben);
+end;                                
+//----------------------------------------------------------------------------
+//--- IQ-PRO2   bö,11.07.2007                                         
+procedure ReadHisto(Checkplan, ProcessLabel, PAVersion: string; var Drawing: string;
+  var CCL: Integer); forward;
+
+// IPM-CSV   jk,18.11.2008: Diese Procedure ermittelt die Kostenstelle aus der IPM-CSV-Datei
+// IPM-CSV   bö,13.08.2010: zusätzlich werden bei 100%-Prüfungen für die "Radialwelle" die letzten 3 Zeichen
+//                          des AVO-SCHRITTS genommen
+//----------------------------------------------------------------------------
+procedure AfterOpenFile(aFileName: string; var aFileText: string);
+var                 
+  aDatei: TStringList;                                                                        
+  MMBemerkung: string;
+  MMBemerkungEnde: string;
+begin
+  aDatei := TStringList.Create;
+  try
+    aDatei.Text := aFileText;
+    // Interface: 4124, 4140, 4145
+    // Kostenstelle in Zeile 4 ab Stelle 6 //12.08.10, bö: suchen für 3 Interface: 4124, 4140, 4145
+    // MM-Bez: bei 100%-Prüfungen: PLA-MM-Bez war nicht immer eindeutig => MM-Bez = PLA-MM-Bez[20]+AVO-SCHRITT[15] im Report !!!
+    //    Bsp: "UNI X_St.120_L-innen... Kleine Lagerschale" und "UNI X_St.120_L-innen... Kleines Lager"
+    //    bei Kistler hat das nicht gereicht: da ist der Unterschied nicht vorne im AVO-SCHRITT, sondern hinten die letzten 2 Zeichen
+    //    AVO-SCHRITT steht auch in MM-Bem
+    //    Ausnahme Kistler: "UNI X_St.130_RWDR un+Radialwell+S2"
+    //  Doku s. R:\PROJEKTE\AKTUELL\QDA8\Projekt_010_PAC\___PAC_Allgemein\Projektspezifisches\Messprotokolle\XML\PLA\_PLA-Direktkopplung\Neue_Reportaufteilung_Vx.xls
+    if (D3ImportHeader.InterfaceCfgNo = 4124) or (D3ImportHeader.InterfaceCfgNo = 4140)
+       or (D3ImportHeader.InterfaceCfgNo = 4145)  then
+    begin
+      KostenstelleCSV := Copy(aDatei[4], 6, 7);
+
+      // bö: UNI-X: Kistler: wenn Text = "Radialwel"
+      if Pos('Radialwel', aDatei[3]) > 0 then
+      begin
+        MMBemerkung := Copy(aDatei[8], 6, length(aDatei[8])); //in der 8.Zeile steht der AVO-SCHRITT => QDA: MM-Bem
+        MMBemerkung := trim(MMBemerkung); // Leerzeichen am Ende raus
+        MMBemerkungEnde := Copy(MMBemerkung, length(MMBemerkung)-1, 2); //die letzten 2 Zeiechen => S2 oder S3
+        aDatei[3] := Copy(aDatei[3], 1, length(aDatei[3])-3) + '+' + MMBemerkungEnde; //die letzten 2 Zeichen ersetzen
+        aFileText := aDatei.Text                                                      //und zum Erkennen noch ein "+" rein
+      end;
+      // 07.05.2013, ABOEG
+      // betroffene Merkmale:  VAG_L2_OP120+LAGERAUSSENRING GROSS IN LB
+      //                       VAG_L2_OP120+LAGERAUSSENRING GROSS AUF AKR
+      //                       VAG_L2_OP120+LAGERAUSSENRING KLEIN IN LB
+      //                       VAG_L2_OP250+LAGERINNENRING AUF AGG TR-SEIT
+      //                       VAG_L2_OP250+LAGERINNENRING AUF AGG KORB
+      //                       VAG_L2_OP350+LAGERAUSSENRING IN GEHAUESE
+      //                       VAG_L2_OP350+LAGERAUSSENRING IN DECKEL
+      //                       VAG_L2_OP350+DICHTRING IN GEHAUESE
+      //                       VAG_L2_OP350+DICHTRING IN DECKEL
+      // VAG_L2_OP120+LAGERAUSSE_Serie_SPC
+      // VAG_L2_OP120+LGAusRiGrossInLB_Serie_SPC
+      // VAG_L2_OP350+LGAusRiInGehaeuse_Serie_SPC
+      // VAG_L2_OP120+LGAusRiGrossAufAKR_Serie_SPC
+      // 0123456789012345678901234567890123456789
+      if Pos('VAG_L2_OP120', aDatei[3]) > 0 then      // 07.05.2013, ABOEG
+      begin
+        if  Pos('GROSS IN LB', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP120+LGAusRiGrossInLB'; // VAG_L2_OP120+LAGERAUSSENRING GROSS IN LB
+        if  Pos('GROSS AUF AKR', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP120+LGAusRiGrossAufAKR';  // VAG_L2_OP120+LAGERAUSSENRING GROSS AUF AKR
+        if  Pos('KLEIN IN LB', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP120+LGAusRiKleinInLB';    // VAG_L2_OP120+LAGERAUSSENRING KLEIN IN LB
+      end;
+
+      if Pos('VAG_L2_OP250*LAGER', aDatei[3]) > 0 then    // 07.05.2013, ABOEG
+      begin
+        if  Pos('TR-SEIT', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP120+LGAusRiAufAGG_TR-SEIT';  // VAG_L2_OP250+LAGERINNENRING AUF AGG TR-SEIT
+        if  Pos('KORB', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP120+LGAusRiAufAGG_Korb';     // VAG_L2_OP250+LAGERINNENRING AUF AGG KORB
+      end;
+
+      if Pos('VAG_L2_OP350+LAGER', aDatei[3]) > 0 then   // 07.05.2013, ABOEG
+      begin
+        if  Pos('IN GEHAEUSE', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP350+LGAusRiInGehaeuse';   // VAG_L2_OP350+LAGERAUSSENRING IN GEHAUESE
+        if Pos('IN Deckel', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP350+LGAusRiInDeckel';     // VAG_L2_OP350+LAGERAUSSENRING IN DECKEL
+      end;
+                                                                                                     
+      if Pos('VAG_L2_OP350+DICHT', aDatei[3]) > 0 then   // 07.05.2013, ABOEG
+      begin
+        if  Pos('IN GEHAEUSE', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP350+DichtRiInGehaeuse';  // VAG_L2_OP350+DICHTRING IN GEHAUESE
+        if Pos('IN Deckel', aDatei[8]) > 0 then
+           aDatei[3] := 'VAG_L2_OP350+DichtRiInDeckel';    // VAG_L2_OP350+DICHTRING IN DECKEL
+      end;
+      aFileText := aDatei.Text;
+      // END // 07.05.2013, ABOEG
+    end                                                                                                                              
+    else
+      KostenstelleCSV := '';
+
+    /// if D3ImportHeader.InterfaceCfgNo = 4124 then
+    ///  KostenstelleCSV := Copy(aDatei[4], 6, 7)
+    /// else
+    ///  KostenstelleCSV := '';
+
+  finally
+    aDatei.Free;
+  end;
+end;
+//----------------------------------------------------------------------------
+procedure UpdateStichprobeninformationsSchema(aPruefplan, aVorgang: String; aSchema: Integer);
+var
+  Qu: TQuery;
+begin
+  Qu := TQuery.Create(nil);
+  try
+    Qu.DatabaseName := 'QDA8';
+    Qu.Close;
+    Qu.Sql.Clear;
+    Qu.Sql.Add('UPDATE STDPPLANVORGANG SET PFLICHTFELDER = :PFLICHTFELDER');
+    Qu.Sql.Add('WHERE PRUEFPLAN = :PRUEFPLAN AND VORGANG = :VORGANG');
+    Qu.ParamByName('PRUEFPLAN').AsString := aPruefplan;
+    Qu.ParamByName('VORGANG').AsString := aVorgang;
+    Qu.ParamByName('PFLICHTFELDER').AsInteger := aSchema;
+    Qu.ExecSql;
+  finally
+    Qu.Free;
+  end;
+end;
+//----------------------------------------------------------------------------
+function GetNextVorgangNr(aCheckplan: string): string;
+var
+  aQuery: TddwQuery;
+begin
+  Result := '0010';
+  aQuery := TddwQuery.Create(nil);
+  try                                                                                              
+    aQuery.DatabaseName := 'QDA8';
+    aQuery.Close;
+    aQuery.Sql.Add('select Max(VORGANG) as MAXVORGANG from STDPPLANVORGANG');
+    aQuery.Sql.Add('where PRUEFPLAN=:PRUEFPLAN');
+    aQuery.ParamByName('PRUEFPLAN').AsString := aCheckplan;
+    aQuery.Open;
+    if aQuery.Bof and aQuery.Eof then
+      Exit;
+    if not aQuery.FieldByName('MAXVORGANG').IsNull then                                                                                    
+      Result := LeftPadCh(IntToStr(StrToInt('0' + aQuery.FieldByName('MAXVORGANG').AsString) + 10),'0', 4);            
+    aQuery.Close;
+  finally
+    aQuery.Free;
+  end;
+end;                    
+//----------------------------------------------------------------------------  
+// IQ-PRO2   bö,11.07.2007
+procedure ReadHisto(Checkplan, ProcessLabel, PAVersion: string; var Drawing: string; var CCL: Integer);
+var
+  Qu: TQuery;
+begin
+  Qu := TQuery.Create(nil);
+  try
+    //ShowMessage(Checkplan+'/'+ProcessLabel+'/'+PAVersion); //#roe080312
+    Qu.DatabaseName := 'QDA8';
+    Qu.Sql.Add('Select P.AENDINDEX, P.STAND');
+    Qu.Sql.Add('from STDPPLANVORGANGHISTO V, STDPPLANHISTO P');
+    Qu.Sql.Add('where P.PRUEFPLAN = V.PRUEFPLAN and P.AENDINDEX = V.AENDINDEX');
+    Qu.Sql.Add('and P.PRUEFPLAN = :PRUEFPLAN and V.VORGANGBEZ = :VORGANGBEZ');
+    Qu.Sql.Add('and V.VFELD06 = :PAVersion');
+    Qu.Sql.Add('order by P.AENDINDEX desc');
+    Qu.ParamByName('PRUEFPLAN').AsString := Checkplan;
+    Qu.ParamByName('VORGANGBEZ').AsString := ProcessLabel;
+    Qu.ParamByName('PAVersion').AsString := PAVersion;
+    Qu.Open;
+    if Qu.Bof and Qu.Eof then
+    begin
+      Drawing := '';
+      CCL := -1;
+    end
+    else
+    begin
+      Drawing := Qu.FieldByName('STAND').AsString;
+      CCL := Qu.FieldByName('AENDINDEX').AsInteger;
+    end;
+    Qu.Close;                   
+  finally
+    Qu.Free;             
+  end;
+end;  
+//----------------------------------------------------------------------------
+//--- Manipulation der Prozessparameter
+procedure OnGetSampleInfoDateTime(SampleNr : integer; Var SampleInfo : TSuchKriterien; Var DateTime : TDateTime);
+var
+zaehler: integer;
+wert: string;
+hilfsKostenstelle: string;   // v2.42 Klingelnberg mit Maschinendaten in Kostenstelle
+posSeparate : Integer;    // v2.42 Hilfsvariable für die nächste Stelle des Trennzeichens
+begin
+   gstrIdentForITG := SampleInfo[1];    //--- ist MessmaschinenNr     
+  if D3ImportHeader.InterfaceCfgNo = 4104 then   //Interface IQ-Pro2
+  begin
+     wert := '';
+     zaehler := 1;
+     while zaehler <= 16 do
+     begin
+        wert := wert + SampleInfo[zaehler];
+        zaehler := zaehler + 1;
+     end;
+  SampleInfo[2] := wert;
+  end;
+  //Kopieren von Prozessparametern
+  if D3ImportHeader.InterfaceCfgNo = 4109 then   // HAT Interface Claas
+  begin
+     {SampleInfo[1] := SampleInfo[2];                        // DMC
+     SampleInfo[2] := 'Linie '       + SampleInfo[5];       // Linie
+     SampleInfo[3] := 'Spannrahmen ' + SampleInfo[3];       // Spannrahmen
+     SampleInfo[4] := '';
+     SampleInfo[5] := '';}
+     // SampleInfo[1] := SampleInfo[2];                        // DMC       // V2.35
+     SampleInfo[3] := 'Spannrahmen ' + SampleInfo[2];       // Spannrahmen  // V2.35
+     SampleInfo[2] := 'Linie '       + SampleInfo[4];       // Linie        // V2.35
+     SampleInfo[4] := '';
+     SampleInfo[5] := '';     
+  end;
+  
+  // v2.42 Klingelnberg mit Maschinendaten in Kostenstelle
+  if D3ImportHeader.InterfaceCfgNo = 5018 then 
+  begin
+    try
+        hilfsKostenstelle := D3ImportHeader.ProcessUserField[1];
+        // wir suchen die Position des Trennzeichens
+        posSeparate := Pos('#', hilfsKostenstelle);    
+        // speichern uns den ersten Teilstring ab        
+        SampleInfo[6] := Copy(hilfsKostenstelle, 1, posSeparate - 1);
+        // speichern die Kostenstelle wieder in den Header
+        D3ImportHeader.ProcessUserField[1] := Copy(hilfsKostenstelle, 1, posSeparate - 1);
+        // und verkürzen den noch zu bearbeitenden Reststring entsprechend
+        hilfsKostenstelle := Copy(hilfsKostenstelle, posSeparate + 1, Length(hilfsKostenstelle));
+        // wir suchen die Position des Trennzeichens
+        posSeparate := Pos('#', hilfsKostenstelle);    
+        // speichern uns den zweiten Teilstring ab    
+        SampleInfo[2] := Copy(hilfsKostenstelle, 1, posSeparate - 1);
+        // und verkürzen den noch zu bearbeitenden Reststring entsprechend
+        hilfsKostenstelle := Copy(hilfsKostenstelle, posSeparate + 1, Length(hilfsKostenstelle));
+        // speichern uns den letzten Teilstring ab    
+        SampleInfo[12] := hilfsKostenstelle;
+    finally
+    end;
+  end;
+{.
+   // v2.53 Für Prisma Import
+   if D3ImportHeader.InterfaceCfgNo = 5009 then 
+    begin       // V1.0.19 ABOEG  // V1.20
+       // D3ImportHeader.obligatory[1] := SampleInfo[1];  // damit man im AfterImport die TeileIdent sieht
+       // SampleInfo[5]                := Copy(SampleInfo[1], 1, 24);
+       D3ImportHeader.obligatory[5] := SampleInfo[1];  // damit man im AfterImport die TeileIdent sieht
+       SampleInfo[1]                := Copy(SampleInfo[1], 1, 24);   // V1.0.22 Klassifikation abschneiden
+       SampleInfo[1]                := SampleInfo[1] + '000000000000';  //V1.0.27 Nullen wegen Prisma Daten (kommt mit Nullen ab Stelle 25 - 36)
+       gstrIdentForITG              := SampleInfo[1];                   //V1.0.27 wegen AfterImport - siehe Kommentar oben
+    end;
+.}  
+  // V2.14
+  if OrderBelegung = 'Werth_Klingelnberg' then
+     D3ImportHeader.Obligatory[1] := SampleInfo[1];    // Anlage über Umweg befüllen  
+end;
+                                                
+// MAIN 
+procedure OnAfterLoad3DImportHeader;
+var
+  Datei:            TStringList;
+  PMGruppe:         string;          //SPC, KMG, ...
+  CCL:              Integer;         //CheckplanChangeLevel
+  Prefix_Checkplan: string;
+  Prefix_Bereich:   string;          //20110421_js  Umess - Bereichskennung aus variablem Programmkopf  (#IF 4129,4143,4147,4148)
+  PB_Zeile:         Integer;         //20110421_js  Umess aus var. Programmkopf (Z9,SP69)
+  PB_Spalte:        Integer;         //20110421_js  Umess aus var. Programmkopf (Z9,SP69)
+  PB_Len:           Integer;         //20110421_js  Umess aus var. Programmkopf (3-stelling)
+  Zeile:            Integer;
+  Typ:              string;
+  Uebersetzung:     string;
+  Path:             string;          // WIEDER RAUS !!
+  // OrderBelegung:    string;       // V2.14: damit OrderBelegung in OnGetSampleInfoDateTime verfügbar ist
+  OrderStr:         string;
+  CSVCheck:         string;        
+  PAVersion:        string;          // IQ-PRO2
+  Stand:            string;          //IQ-PRO2                                                                                         
+  Baureihe:         String;          //jk : PLA-Erweiterung
+  ID:               String;          //      Such
+  UZZeile:          Integer;         //jk : Umess Nr.14
+  UZSpalte:         Integer;         //jk : Umess Nr.14
+  UZLaenge:         Integer;         //jk : Umess Nr.14
+  PartOrg:          string; //#roe100317
+  CheckplanOrg:     string; //#roe100323
+  Baumuster:        String;
+  Pruefer:          String;
+  Status:           String;
+  PruefStelle:      String;
+  SachNR:           String;  
+  Pruef_Datum_Start: String;
+  Pruef_Datum_Ende: String;                       
+  Programmnamekomplett: String;
+  Pruefschritt:     String; 
+  Version:          String;
+  qsstat_uz:        String;
+  CheckplanTemp:    String;
+  ProcessLabelSuffix: String;   
+  sPart:             string;          
+  sCheckplan:        string;
+  
+  
+  
+  //#IF 4158-
+  FList              : TStringList; //XML-Import ADM
+  DateiName          : string;  //XML-Import ADM
+  bolDone            : boolean;  //Verarbeitungsflag
+
+  //--- 20130521_js: automatisches Anlegen fuer #ITF_4158
+  PartObj            : TPart;
+  CheckplanObj       : TCheckplan;
+  ProcessObj         : TCheckplanProcess;
+
+  //--- 20140115_js: dient zum Einschalten der globalen Auftragszusammenstzung mit Orderbelegungs-Typ
+  //--- ist fuer alle , bis auf Sonder-Sonderbehandlung IF 4171.
+  istAuftragMitStdOrderbelegung   : boolean;
+  istPruefplanVeraendert          : boolean;
+
+begin
+  Datei             := TStringList.Create;
+  Prefix_Checkplan  := 'PROJEKT';
+  Typ               := 'LEER';
+  Uebersetzung      := 'LEER';
+  UZ                := '';
+  PMGruppe          := 'SPC';
+  OrderBelegung     := 'STANDARD';
+  CSVCheck          := '';  // ist Processlabel im generellen Zweig zu setzen wenn = 'j'
+  ProcessLabelSuffix := '';
+  istAuftragMitStdOrderbelegung := true; //--- Nachbehandung der Auftragsbildung sollte standardmaeßig true sein.
+  istPruefplanVeraendert        := false; //--- Standard, wegen PPL-Prefix-Bildung am Pruefplan
+  gstrIdentForITG   := ''; //--- global, init fuer Prisma-Mapping!
+  try 
+    with D3ImportHeader do                    
+    begin
+      Datei.Text := HeaderLines;
+      PartOrg := Part; //#roe100317
+      ExcludeFromIFHandling := false; // Sonderbehandlung ANA-FSK Standard ausschalten  
+      // Sachnummer: Leerzeichen raus nur wenn NICHT IQ-PRO2, also nicht bei IQ-PRO2   bö, 11.07.07
+      // 20180507_js: Leerzeichen ebenfalls lassen bei ANA-Daten: IF5003 (nicht Typ, sonder spez. ANA-Interface 5003 )      
+      if (InterfaceType <> 29)  then // 29 = IQ-Pro2
+      begin
+        if (InterfaceCfgNo <> 5003)  then
+        begin
+            while Pos(' ', Part) > 0 do    //Alle Leerzeichen aus der Teilebezeichnung entfernen
+                Part := Copy(Part, 1, Pos(' ', Part) - 1) + Copy(Part, Pos(' ', Part) + 1, Length(Part));
+            Part := TrimRight(Part);
+        end; 
+      end;
+      
+      //#roe080919 {
+      if InterfaceType = 29 then // 29 = IQ-Pro2                      
+      begin
+           if Pos('  ', Part) > 0 then                                                                           
+           begin
+                //Part := ReplaceSpaces(Part);
+           end;
+           if Pos(' ', Part) > 0 then
+           begin
+                //Part := ReplaceSpaces(Part);
+           end;
+      end;
+      //#roe080919 }
+
+      Zeile := 0;
+      while Zeile < Datei.Count do
+      begin
+        // Prüfmittelgruppe K1203: SPC, KMG
+        if Pos('K1203', Datei[Zeile]) > 0  then // gefunden
+        begin
+          PMGruppe    := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+          while Pos(' ', PMGruppe) > 0 do            // V2.10 Werth: in K1203 = "SPC " war plötzlich ein Blank hinten dran. Führt im Importpuffer zu Fehlermeldung, dass Vorgang schon vorhanden 
+            PMGruppe := DeleteSpaces(PMGruppe);  
+        end;   // if
+
+        // UZ: K1209 Serie, Sonder, ...
+        if Pos('K1209', Datei[Zeile]) > 0  then // gefunden
+        begin
+          UZ    := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+        end;   // if             
+      
+        // Kostenstelle: K1103 Kostenstelle -> QS-Stat 3.0                      
+        if ((D3ImportHeader.InterfaceType = 15) or (D3ImportHeader.InterfaceType = 5018)) then    // v2.42 Klingelnberg mit Maschinendaten in Kostenstelle
+        begin                                                               
+          if Pos('K1103', Datei[Zeile]) > 0  then // gefunden
+          begin
+            ProcessUserField[1] := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+          end;
+        end;
+    
+
+        // Kostenstelle: Zeile 7, Spalte 15, Laenge 7 -> QS-Stat 2.5
+        if (D3ImportHeader.InterfaceType = 6) then                                                     
+        begin
+          ProcessUserField[1] := Copy(Datei[6], 15, 7);
+//          ShowMessage('KST=' + ProcessUserField[1]);
+        end;                                                   
+                                                
+        Zeile := Zeile + 1;
+      end;
+
+      case InterfaceCfgNo of
+        // ##################################################
+        3, 15, 5010, 5018: begin  // GFA Werth, Klingelnberg: checkplan, processlabel,order   // V1.39.2
+                      // V2.14: Parameter-Belegung für Aft-Nr aus TeileIdent muss noch gemacht werden (für Jungk/Kansy)
+                      // V2.31: IF 5010: Zeiss Prismo integriert
+            Prefix_Checkplan := PREFIX_GFA;
+            
+            // PP aus Teilefamilie (K1002), Typ (K1003) und Übersetzung (K1007)
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin                                                       
+              // Typ K1003 FE-HAG215
+              if Pos('K1003', Datei[Zeile]) > 0  then // gefunden
+              begin
+                Typ    := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+              end;   // if
+                                           
+              // Übersetzung K1007 i = 2.65
+              if Pos('K1007', Datei[Zeile]) > 0  then // gefunden
+              begin
+                Uebersetzung    := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+
+// ################################################## Wegen Dateien im Importpuffer die im "Importet" Verzeichnis liegen ausgeblendet hjungk, 19.07.2017      
+{
+            PPschonZugeordnet := 0;           // im Batchmodus funktioniert das hier nicht. Das mal als schnelle Abhilfe.
+            if PPschonZugeordnet <> 1 then   // wg. Verhalten im Importpuffer implementiert. Funktioniert im Batchmodus nicht !
+            begin
+              // Ergänzungen nur einmal rein
+              If (Pos(Typ,checkplan) = 0) then               
+              begin
+                checkplan := checkplan + '_' + Typ + '_' + Uebersetzung;
+              end;
+
+              //D3ImportHeader.Checkplan :=  PruefplanPruefplanGet (D3ImportHeader.Checkplan);      // V1.39.2
+              PPschonZugeordnet := 1;
+            end; 
+}
+// ################################################## Wegen Dateien im Importpuffer die im "Importet" Verzeichnis liegen ausgeblendet hjungk, 19.07.2017
+
+              If (Pos(Typ,checkplan) = 0) then               
+              begin
+                checkplan := checkplan + '_' + Typ + '_' + Uebersetzung;
+              end;
+
+
+            // OrderBelegung := 'AftNr_ist_Part+Checkplan';      // V2.12 
+            if length (D3ImportHeader.Order) > 0 then
+            begin
+               sPart := Part;
+               sCheckplan := Checkplan;
+               Order := GetOrder(Order, sPart, sCheckplan, cOrderArt1); // V2.15
+               OrderStr := Order;      //#roe100317
+               OrderBelegung := 'ADM';    //#roe100317
+               if (Pos('-',Order) = 5) then
+               begin
+                 Part := GetSNRfromOrder(Order); 
+                 Checkplan := GetCPLfromOrder(Order);
+               end;
+            end;// V2.15
+            else
+              OrderBelegung := 'AftNr_ist_Part+Checkplan';
+              
+            if InterfaceCfgNo = 5010 then                // V2.31
+               UZ   := GetAuftragschluessel(UZ);         // V2.31
+            
+        end;   //  of case GFA Werth, Klingelberg
+        // ##################################################
+        4120: begin  // GFA checklan, processlabel,order            // V1.39.2   4120 separiert. Vorher: case: "3, 15, 4120":
+                            // 15.06.2009, bö: EmcoTester 4120 aufgenommen
+                            // 1203=UZ=Serie bei EmcoTester belassen, da sonst Text "Serienprüfung" genommen wird.
+            Prefix_Checkplan := PREFIX_GFA;
+            // PP aus Teilefamilie (K1002), Typ (K1003) und Übersetzung (K1007)
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // Typ K1003 FE-HAG215
+              if Pos('K1003', Datei[Zeile]) > 0  then // gefunden
+              begin
+                Typ    := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+              end;   // if
+
+              // Übersetzung K1007 i = 2.65
+              if Pos('K1007', Datei[Zeile]) > 0  then // gefunden
+              begin
+                Uebersetzung    := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+
+            // Ergänzungen nur einmal rein
+            If (Pos(Typ,checkplan) = 0) then                                                                                                  
+            begin
+              checkplan := checkplan + '_' + Typ + '_' + Uebersetzung;
+            end;
+
+        end;   //  of case GFA EmcoTester
+        // ##################################################
+        5, 4112: begin  //GFA Marposs Win2000
+             Prefix_Checkplan := PREFIX_GFA;
+             /// Prefix_Checkplan := Prefix_Checkplan + 'GH_';    // WIEDER RAUS !!
+
+             UZ := 'Serie';
+             PMGruppe := 'MA';
+             OrderBelegung := 'GH_Marposs';    
+
+        end;     // of case GFA Marposs Win2000
+        // ##################################################
+        6: begin  //GFA Marposs DOS
+             Prefix_Checkplan := PREFIX_GFA;
+             /// Prefix_Checkplan := Prefix_Checkplan + 'GH_';       // WIEDER RAUS => 'GFA_GH_GH200_AL'
+
+             PMGruppe := 'MA';
+             OrderBelegung := 'GH_Marposs';
+
+        end;     // of case GFA Marposs DOS
+
+        4164: begin  //GFA Marposs Alu-HAG
+             Prefix_Checkplan := PREFIX_GFA;
+             UZ   := GetAuftragschluessel(UZ);
+             OrderBelegung := 'GH_Marposs';
+        end;     // of case GFA Marposs Alu-HAG
+
+        // ##################################################
+        8: begin  //eRK NT
+            Prefix_Checkplan := PREFIX_SWP;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              UZ := 'Serie';
+              PMGruppe := 'SPC';
+              if Pos('K1042', Datei[Zeile]) > 0  then // gefunden // EIGENTLICH FALSCH. ! NUR HAFNER !
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+
+        end;     // of case eRK NT
+        // ##################################################
+        11: begin // "PAC/SWP eRK-DFT DOS"
+            Prefix_Checkplan := PREFIX_SWP;
+            UZ := 'Serie';
+            PMGruppe := 'SPC';
+            //ShowMessage('ProcessLabel=' + ProcessLabel);
+        end; // "PAC/SWP eRK-DFT DOS"
+        // ##################################################
+        13: begin  //SWP Hafner
+            Prefix_Checkplan := PREFIX_SWP;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              if Pos('K1042', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+
+         end;     //SWP Hafner
+        // ##################################################
+         4127: begin  //SWP Hafner
+            Prefix_Checkplan := PREFIX_SWP;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                UZ   := GetAuftragschluessel(UZ);
+              end;   // if
+
+              Zeile := Zeile + 1;
+          end;  // while
+
+         end;     //SWP Hafner NEU mmiceli
+        // ##################################################
+         4159: begin  // SWP Frenco (20130702, ABOEG:)
+            Prefix_Checkplan := PREFIX_SWP;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                UZ   := GetAuftragschluessel(UZ);
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+
+            PPschonZugeordnet := 0;           // im Batchmodus funktioniert das hier nicht. Das mal als schnelle Abhilfe.
+            if PPschonZugeordnet <> 1 then   // wg. Verhalten im Importpuffer implementiert. Funktioniert im Batchmodus nicht !
+            begin
+              D3ImportHeader.Checkplan :=  PruefplanZuSaCodeGet(D3ImportHeader.Checkplan);
+              PPschonZugeordnet := 1;
+            end;
+            OrderBelegung := 'Frenco_Polaris_Jenoptik';
+
+         end;     //SWP Frenco ABOEG
+        // ##################################################
+         4162, 4163: begin  // SWP Hafner/Polaris (20130812, ABOEG: 20130812_ab) + SWP Hommel/Jenoptik (20130919, ABOEG: 20130919_ab)
+            Prefix_Checkplan := PREFIX_SWP;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                UZ   := GetAuftragschluessel(UZ);
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+
+            OrderBelegung := 'Frenco_Polaris_Jenoptik';
+         end;     //SWP Hafner/Polaris + SWP Hommel/Jenoptik   ABOEG
+        // ##################################################
+        14,4130,4135: begin //PAC/MR_Zeiss_UMESS  !! 8.6.09, bö,pf: Vorsicht: 4135 UZ andere Konfiguration
+            Prefix_Checkplan := '';
+            if InterfaceCfgNo = 4135 then
+            begin
+              UZZeile  := 13;
+              UZSpalte := 55;
+              UZLaenge := 2;
+            end
+            else
+            begin
+              UZZeile  := 14;
+              UZSpalte := 21;
+              UZLaenge := 2;
+            end;
+            if Datei.Count >= UZZeile then
+            begin
+              UZ := Copy(Datei[UZZeile - 1], UZSpalte, UZLaenge);
+              UZ := trim(UZ);
+              UZ := GetAuftragschluessel(UZ);                                                   
+              if(length(UZ) < 1) then
+                UZ := '!NICHT_DEFINIERT!';
+              while Pos(' ', UZ) > 0 do
+                UZ := DeleteSpaces(UZ);
+            end;
+            PMGruppe := 'KMG';
+        end; //of PAC/MR_Zeiss_UMESS
+        // ##################################################
+        16,21,22: begin // "PAC/VAP eRK-DFT DOS + NT"  mm und wf am 070706, bö am 270706
+            Prefix_Checkplan := PREFIX_VAP;
+            UZ := 'Serie';
+            PMGruppe := 'SPC';
+            //ShowMessage('ProcessLabel=' + ProcessLabel);
+        end; // "PAC/VAP eRK-DFT DOS"
+        // ##################################################
+        23, 4113: begin // "PAC/ACM_HA Hafner"                                                                             
+            Prefix_Checkplan := PREFIX_ACH_HA;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                UZ   := GetAuftragschluessel(UZ);                                                    
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+            PMGruppe := 'KMG';
+        end; // "PAC/ACH Hafner" 
+        // ##################################################
+        
+        5012: begin // "PAC/ACM_HA  RT Marposs"                                                                             
+            Prefix_Checkplan := PREFIX_ACH_HA;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                UZ   := GetAuftragschluessel(UZ);                                                    
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+        end; // "PAC/ACH Hafner" 
+        
+        // ##################################################        
+        4123: begin // "PAC-ACM RT Zeiss Accura Calypso" // V2.2 16.03.2015, aboeg wg. Auftragsnummer = SNR + PP
+            Prefix_Checkplan := PREFIX_ACH_HA;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ...
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                UZ   := GetAuftragschluessel(UZ);                                                    
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+            PMGruppe := 'KMG'; 
+            // OrderBelegung := 'VAP_Calypso'
+            OrderBelegung := 'AftNr_ist_PP'
+        end; // PAC-ACM RT Zeiss Accura Calypso
+        
+        // ##################################################
+        4149: begin // "PAC/VAP Zeiss Calypso ZS"  jp am 091111
+            Prefix_Checkplan := PREFIX_VAP;
+                                                         
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1042 Serie, Sonder, ... 
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                if  length (UZ) = 0 then            // 04.03.2015, ABOEG: vorläufig. Nach 4 Wochen wieder raus
+                    UZ := 01;
+                UZ   := GetAuftragschluessel(UZ);
+              end;   // if
+
+              Zeile := Zeile + 1;
+            end;  // while
+            PMGruppe      := 'KMG';
+            // OrderBelegung := 'VAP_Calypso'
+            // OrderBelegung := 'AftNr_ist_PP'
+            OrderBelegung := 'AftNr_ist_Part+Checkplan';   // V2.43
+
+            //ShowMessage('ProcessLabel=' + ProcessLabel);
+        end; // "PAC/ACH Hafner"
+        // ##################################################
+        24: begin // "PAC/BS Scherer"  bö am 301006
+            Prefix_Checkplan := PREFIX_BS;
+            UZ := 'Serie';
+            PMGruppe := 'MS';
+        end; // "PAC/BS Scherer"
+        // ##################################################
+        25: begin // "PAC/BS Blum"  bö am 301006
+            Prefix_Checkplan := PREFIX_BS;
+            UZ := 'Serie';
+            PMGruppe := 'MA';
+        end; // "PAC/BS Blum"
+        // ##################################################
+        26, 4109: begin // "PAC/SFE Claas"  mm am 291106
+            Prefix_Checkplan := PREFIX_SFE;
+            //bö: Umschreiben der P-Par ganz unten "OnGetSampleInfoDateTime"
+            // UZ := 'Serie';     //    da im Interface bei "Zusatzdaten" die Reihenfolge nicht definierbar
+            // PMGruppe := 'MA';
+        end; // "PAC/SFE Claas"
+        // ##################################################
+        4118, 4178, 4185, 5017, 5024, 5020: begin // "PAC/SFE Claas MAPVISION ITG212" roe am 301008    //bö, 27.05.11 + Claas HAT246 //aboeg, 30.05.16: 4178 angefügt  // V2.39
+            Prefix_Checkplan := PREFIX_SFE;            //bö, V2.48: + IF 5024 ITG 297 EVA2 Mapvision   //bö, V2.50 + IF 5020 HAT 297 EVA2 Nokra
+            UZ := GetAuftragschluessel(UZ);
+            //UZ := 'Serie';
+           OrderBelegung := 'PAC/SFE Claas ITG'; // jb:20131104  // ob das für alle ITG gilt? neues IF 5024 mal hier verdrahtet
+        end; // "PAC/SFE Claas MAPVISION ITG212"
+        // ##################################################
+        4160: begin // "PAC/SFE Claas MAPVISION ITG212" roe am 301008    //bö, 27.05.11 + Claas HAT246
+            Prefix_Checkplan := PREFIX_SFE;
+            UZ := GetAuftragschluessel(UZ);
+            //UZ := 'Serie';
+        end; // "PAC/SFE Claas MAPVISION ITG212"
+        // ##################################################
+        5001: begin // "PAC/GPA Radsatz Gleason"  // V2.30 ABOEG
+            Prefix_Checkplan := PREFIX_GFA;
+            UZ := GetAuftragschluessel(UZ);
+            OrderBelegung := 'AftNr_ist_PP';   // V2.32 ABOEG: AftNr war nur SNR. Das reichte nicht. SNR+PP ist zu lang
+        end; // "PAC/GPA Radsatz Gleason"  
+        // ##################################################
+        5009: begin // "PAC/SFE Fa.Aumann IT223 MRA2"  // V2.29 ABOEG
+            Prefix_Checkplan := PREFIX_SFE;
+            // Checkplan := 'ITG_MRA2 4x4';      // V2.36 ABOEG. War wg. ersten Testdaten drin
+            // Processlabel := 'Fertigmessung';  // V2.34
+            // PMGruppe := 'KMG';                // V2.34
+            // UZ := '01';                       // V2.34
+            UZ := GetAuftragschluessel(UZ);
+            //UZ := 'Serie';
+        end; // "PAC/SFE Claas MAPVISION ITG212"         
+        // ##################################################
+        30, 4105, 4111:   //  IPM/PLA/SQL-Export  bö 070504 <<< ALT !!! >>>
+        begin
+            Prefix_Checkplan := '';
+            UZ := '';
+            PMGruppe := '';
+            CSVCheck := 'j';
+        end;
+        // ##################################################
+        4104:  //IQ-Pro
+        begin
+            InterfaceNr := InterfaceCfgNo;
+        end;
+        // ##################################################
+         4114, 4116, 5005: //Radflansch Hafner    mm
+         begin
+           Prefix_Checkplan := PREFIX_GFA;
+           Checkplan:=DeleteSpaces(Checkplan);
+           // 23.06.08, bö: NUR KURZFRISTIG, bis K1002 vor Ort richtig befüllt wird !!!
+           // ASP: H.Kokkalis
+           ///// Baureihe := Copy(Part,0,4);
+           ///// Checkplan := Checkplan + '_' + Baureihe;
+           // END  23.06.08, bö: NUR KURZFRISTIG
+           Processlabel:= DeleteSpaces(Processlabel);
+           Processlabel:= trim(Processlabel);
+
+           UZ := GetAuftragschluessel(UZ);
+
+           if length(Processlabel)<3 then
+           Processlabel:= GetAuftragschluessel(Processlabel);
+
+           OrderBelegung := 'AftNr_ist_Part+Checkplan';   // V2.22 ABOEG: DS-MMs gehen laut H.Lesch in einen weiteren PP "GPA_RF_A213F" anstatt "GPA_RF_A213"
+         end;
+        // ##################################################
+        4117 : begin  // SPC PROVEQ
+             Prefix_Checkplan := PREFIX_PRE;
+             UZ := 'Serie';                 //aboeg, 05.10.11, K1209 würde auch kommen PROVE
+             PMGruppe := 'SPC';             //aboeg, 05.10.11, K1203 würde auch kommen
+//             PMGruppe := 'MA';
+//             OrderBelegung := 'GH_Marposs';      //aboeg: 05.10.11: das KURZFRISTIGE wieder raus
+             {case Part of                         //bö, 26.06.09: NUR KURZFRISTIG rein, bis Änderung vor Ort
+             'A2730320156': Checkplan := 'AZK_55' //ASP: H.Kokkalis
+             'A6420320376',
+             'A6510320076',
+             'A2780300012': Checkplan := 'AZK_80'
+             'A6460320076': Checkplan := 'AZK_60'
+             end;                                 //END bö, 26.06.09: NUR KURZFRISTIG
+             }
+        end;     // of case SPC PROVEQ
+        // ##################################################
+        4172, 4184, 5021: begin  // SPC MQS + Renishaw  // V1.37  // V2.16 (Renishaw)    //V2.48 HAfner TRR EVA2        
+             Prefix_Checkplan := PREFIX_PRE;
+             UZ := 'Serie';                                                                         
+             PMGruppe := 'SPC';
+        end;     // of case SPC MQS
+        // ##################################################
+        5022, 5023: begin  // APEX und Kistler TRR EVA2 //V2.48
+             //keine Sachnnr bei APEX, daher aus dem Ident ausschneiden             
+             D3ImportHeader.Part := 'A' + GetPartFromImportFile (D3ImportHeader.Filename, TEIL_COPY_START_POS_2);
+             Prefix_Checkplan := PREFIX_PRE;
+             UZ := 'Serie';                                                                         
+             PMGruppe := 'SPC';
+        end;     // of case APEX
+       // ##################################################
+        5025, 5026: begin  // CSV APEX und Kistler TRR EVA2 //V2.52
+             //keine Sachnnr bei APEX, daher aus dem Ident ausschneiden             
+             D3ImportHeader.Part := 'A' + Copy(D3ImportHeader.obligatory[1], TEIL_COPY_START_POS_2, TEIL_COPY_LENGTH);
+             Prefix_Checkplan := PREFIX_PRE;
+             UZ := 'Serie';                                                                         
+             PMGruppe := 'SPC';
+        end;     // of case APEX
+        // ##################################################
+        4119, 4136: begin  //SPC QS-Torque
+             Prefix_Checkplan := '';
+             OrderBelegung := 'QS-Torque'; // in Teil steht nur BR ! BR kann für mehrere PPs gelten
+             UZ := 'Serie';                // in K1209 kommt Serie mit führendem Blank -> mit reg. Ausdruck überschreiben
+             
+        end;     // of case QS-Torque
+        // ##################################################
+        4124, 4140, 4145: begin  //SPC IPM-PLA Prüfungen-Merkmale  !!! Vorsicht: neue InterfaceNr in "AfterOpenFile" nachpflegen
+             UZ := 'Serie';
+             OrderBelegung := 'IPM-PLA';
+             // Prefix_Checkplan := PREFIX_ACH;
+             if Pos('BR204', Part) > 0  then
+                Prefix_Checkplan := PREFIX_ACH
+             else if Pos('HAG187', Part) > 0  then
+                Prefix_Checkplan := PREFIX_GFA
+             else if Pos('VAG', Part) > 0  then
+                Prefix_Checkplan := PREFIX_GFA
+             else if Pos('BR212', Part) > 0  then
+                Prefix_Checkplan := PREFIX_ACH_VA
+             else if Pos('A204', Part) > 0  then
+                Prefix_Checkplan := PREFIX_ACH
+             else if Pos('xxx', Part) > 0  then
+                Prefix_Checkplan := PREFIX_ACH;
+             ProcessUserField[1] := KostenstelleCSV; //Procedure AfterOpenFile
+             //Procedure AfterOpenFile setzt für Kistler ans Vorgangsende die letzten 2 Zeichen des AVO-SCHRITTS
+             //                              Abfrage: "Radialwe" !!!!!
+        end;     // of case SPC IPM-PLA
+        // ##################################################
+        // 02.12.2008 jk Anpassung für Umess
+        4126: begin  //Umess PAC_UX_SFE - SFE
+             Prefix_Checkplan := PREFIX_SFE;
+             UZZeile  := 14;
+             UZSpalte := 21;
+             UZLaenge := 2;
+             if Datei.Count >= UZZeile then
+             begin
+               UZ := Copy(Datei[UZZeile - 1], UZSpalte, UZLaenge);
+               UZ := trim(UZ);
+               UZ := GetAuftragschluessel(UZ);
+               if(length(UZ) < 1) then
+                 UZ := '!NICHT_DEFINIERT!';
+               while Pos(' ', UZ) > 0 do
+                 UZ := DeleteSpaces(UZ);
+             end;
+             PMGruppe := 'KMG';
+         end;     // of case Umess PAC_UX_SFE
+        // ##################################################
+        // 11.12.2008 jk Anpassung für Umess - VAP
+        4128: begin  //Umess PAC_UX_VAP
+             Prefix_Checkplan := PREFIX_VAP;
+             UZZeile  := 14;
+             UZSpalte := 21;
+             UZLaenge := 2;
+             if Datei.Count >= UZZeile then
+             begin
+               UZ := Copy(Datei[UZZeile - 1], UZSpalte, UZLaenge);
+               UZ := trim(UZ);
+               UZ := GetAuftragschluessel(UZ);
+               if(length(UZ) < 1) then
+                 UZ := '!NICHT_DEFINIERT!';
+               while Pos(' ', UZ) > 0 do
+                 UZ := DeleteSpaces(UZ);
+             end;
+             PMGruppe := 'KMG';
+         end;     // of case Umess PAC_UX_VAP
+
+        // =================================================================
+        //--- 21.04.2011 js Anpassung für Umess #13109598
+        4129, 4148, 4143, 4147: begin  //Umess PAC_UX_SWP, PAC_UX_SWP_DT,
+        //--- 20110421_js: Bereich soll als Prefix aus der Zeile 9,Spalte 69, 3-stellig entnommen werden
+        //--- und an den Prüfplan vorangestellt werden.
+        //--- m104qsp1 ... m104qsp4 -> Interface PAC_UX_ZMR, Interface PAC_UX_ZMR_DT
+        //--- m104swp1, m104swp1_DT, m104swp2, m104swp2_DT -> Interface PAC_UX_SWP, -> Interface PAC_UX_SWP_DT
+            Prefix_Checkplan := '';
+            PB_Zeile := 9;
+            PB_Spalte := 69;
+            PB_Len := 3;
+            if Datei.Count >= PB_Zeile then
+             begin
+               Prefix_Checkplan := Copy(Datei[PB_Zeile - 1], PB_Spalte, PB_Len);
+               Prefix_Checkplan := trim(Prefix_Checkplan);
+               Prefix_Checkplan := Prefix_Checkplan + '_';
+               if(length(Prefix_Checkplan) < 1) then
+                 Prefix_Checkplan := '!NICHT_DEFINIERT!';
+               while Pos(' ', Prefix_Checkplan) > 0 do
+                 Prefix_Checkplan := DeleteSpaces(Prefix_Checkplan);
+             end;
+             //--- Untersuchungszweck ermitteln
+             UZZeile  := 14;
+             UZSpalte := 21;
+             UZLaenge := 2;
+             if Datei.Count >= UZZeile then
+             begin
+               UZ := Copy(Datei[UZZeile - 1], UZSpalte, UZLaenge);
+               UZ := trim(UZ);
+               UZ := GetAuftragschluessel(UZ);
+               if(length(UZ) < 1) then
+                 UZ := '!NICHT_DEFINIERT!';
+               while Pos(' ', UZ) > 0 do
+                 UZ := DeleteSpaces(UZ);
+             end;
+             PMGruppe := 'KMG';
+             //--- 20110502_js: (PAC_ZMR) Hr. Büschel: Ummess mit dyn. Toleranzen
+             //--- Achtung: max. Länge des Auftrages 40 Zeichen!
+             //--- hier "A2213370706_SWP_VGG_221_337_07 / 0" => length = 35
+             OrderBelegung := 'ZMR_DT';
+        end;     // of case Umess PAC_UX_SWP
+
+        // =================================================================
+        // ##################################################
+        4132: //Vorderradnabe Hafner    bö
+        begin
+          Prefix_Checkplan := PREFIX_VAP;
+          UZ := GetAuftragschluessel(UZ);
+        end;  // End Vorderradnabe Hafner
+
+         //#roe100317 {
+      // ##################################################
+        4144:  //qs-Stat 3.0 Spektrometer   hjungk: 16.03.2010
+        begin
+            // '/' aus Checkplan entfernen und Checkplan mit der Teilenummer belegen
+            if Pos('/', Checkplan) > 0 then
+            begin
+               ProcessLabel := Copy(Checkplan, Pos('/', Checkplan) + 1, Length(Checkplan));
+               Checkplan := Part;            
+            end;
+                                                       
+            // Leerzeichen aus Vorgang löschen
+            ProcessLabel := DeleteSpaces(ProcessLabel); 
+            
+            sPart := Part;
+            sCheckplan := Checkplan;
+            
+            Order := GetOrder(Order, sPart, sCheckplan, cOrderArt1);  
+            OrderStr := Order;      //#roe100317
+            OrderBelegung := 'ADM';    //#roe100317
+             
+            Part := GetSNRfromOrder(Order); 
+            Checkplan := GetCPLfromOrder(Order); 
+            Prefix_Checkplan := sCheckplan;                                              //#roe100323
+
+          end; //qs-Stat 3.0 Spektrometer
+            //#roe100317 }
+
+        //#roe100729 {
+      // ##################################################
+        28:  //  PLA
+      // ##################################################
+         begin
+           //Checkplan:=Datei.Values['Pruefplanname']; //#roe100729
+           Checkplan:='MFA_1'; //#roe100729
+           Prefix_Checkplan:=Checkplan; //#roe100729
+
+           //Processlabel:=Datei.Values['Vorgangsname']; //#roe100729
+           //ProcessLabel:=Datei.Values['Station'];      //#roe100729, #roe100908
+           //ProcessLabel:='Einpressen FELA in HAT';       //#roe100908, #roe100917
+           ProcessLabel:=Datei.Values['Pruefschritt'];     //#roe100917
+           UZ:=ProcessLabel; //ohne UZ ausgeben          //#roe100729
+           PMGruppe:='';                                 //#roe100729
+
+           //Part:=Datei.Values['SachNr']; //#roe100729
+           Part:=Datei.Values['ID'];       //#roe100729
+           Part:=copy(Part,2,10);          //#roe100729
+
+
+           // Such
+//           ID:= Datei.Values['KMG-ID'];
+           ID:= Datei.Values['ID'];
+           Obligatory[1]:=ID;
+           //showmessage('Ident: ' + ID);
+
+           Baumuster:= Datei.Values['ID'];
+           Obligatory[2]:=copy(Baumuster,1,5);
+
+           Pruefer:= Datei.Values['Pruefer'];
+           Obligatory[3]:=Pruefer;
+
+           Pruefstelle:= Datei.Values['Pruefstelle'];
+           Obligatory[4]:=Pruefstelle;
+
+           Pruef_Datum_Start:= Datei.Values['Pruef_Datum_Start'];
+           Obligatory[5]:=Pruef_Datum_Start;
+
+           Pruef_Datum_Ende:= Datei.Values['Pruef_Datum_Start'];
+           Obligatory[6]:=Pruef_Datum_Ende;
+
+           SachNr:= Datei.Values['SachNr'];
+           Obligatory[7]:=SachNr;
+
+           Version:= Datei.Values['Version'];
+//           Obligatory[8]:=Version;
+           Obligatory[8]:=ID;
+
+           Programmnamekomplett:= Datei.Values['Programm'];
+           Obligatory[9]:=Programmnamekomplett;
+
+           Pruefschritt:= Datei.Values['Pruefschritt'];
+           Obligatory[10]:=Pruefschritt;
+
+           Obligatory[1]:=ID;
+
+           //Order := Checkplan;        //#roe100729
+           Order := Part;               //#roe100729
+           OrderBelegung := 'STANDARD'; //#roe100729
+
+         end;
+//#roe100729 }
+
+        // ##################################################
+         4146: begin  //#js20101102 GPA Hafner DFQ Licon
+        // ##################################################
+           Prefix_Checkplan := PREFIX_GFA;
+           UZ := 'Serie';                                         
+           PMGruppe := 'MA';
+           ProcessLabel := DeleteSpaces(ProcessLabel); 
+         end;
+
+        // ##################################################
+         4150, 4165, 4167, 4168, 4169, 4170, 4166, 4181: begin  //#20111207_aboeg ACM VA ZS Kistler DFQ : 4165, 4167 - 4170: CSV: 4166   Test Kistler mit Kurven  20131121_ab
+        // ##################################################                               
+           Prefix_Checkplan := PREFIX_ACH_VA;
+           UZ := 'Serie';
+           PMGruppe := 'EINPR';
+           ProcessLabel := DeleteSpaces(ProcessLabel); 
+         end;
+        // ##################################################
+         4157: begin  //#20121029_aboeg ACM VA ZS Reibmoment Arndt & Voß  GmbH DFQ               
+        // => UZ und PMGruppe könnten aus der DFQ gelesen werden !
+        // ##################################################
+           Prefix_Checkplan := PREFIX_ACH_VA;                                                                  
+           UZ := 'Serie';
+           PMGruppe := 'REIB';
+           ProcessLabel := DeleteSpaces(ProcessLabel); 
+         end;
+// {20110331_js
+        // ##########################################################################
+        4142, 4186, 5014: begin  //#20110331_js CALYPSO-PAC-ZMR-Anpassung (A. Maier, #0013239831)  // V2.46: + IF 5014  aboeg
+        // ##########################################################################
+        {->
+            Part         => Teil=<K1001> Leerzeichen müssen raus ist schon ok Bsp.: A2460302241
+            Checkplan    => Prüfplan=<K1101>_<K1002> Bsp.: ZMR_Andreas Maier_01 ist noch offen
+            ProcessLabel => Vorgang=<K1086>_<K1209>_<K1203> Bsp.: VORBEARBEITUNG_REKLAMATION_KMG prüfen
+            Order        => Auftrag=<K1001>_<Prüfplan> / Index Bsp.: A2460302241_ZMR_
+                            Andreas Maier_01 / 0 ist noch offen
+            K1001   Part  |  K1002   Checkplan  | K1086   ProcessLabel/Vorgang
+            K1209   zu holen
+            K1203   zu holen
+            K1101   zu holen
+        <-}
+
+           Zeile := 0;
+           qsstat_uz := '';
+           PMGruppe := '';
+           Prefix_Checkplan := '';
+           
+           while Zeile < Datei.Count do
+           begin
+               if qsstat_uz = '' then
+                  if Pos('K1209', Datei[Zeile]) > 0 then
+                  begin
+                     qsstat_uz := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     qsstat_uz := trim(qsstat_uz);
+                     qsstat_uz := DeleteSpaces(qsstat_uz); 
+                  end;
+                if Prefix_Checkplan = '' then
+                begin
+                  if Pos('K1101', Datei[Zeile]) > 0 then 
+                  begin
+                     if length(Datei[Zeile]) > 6 then  // V236, ABOEG: Varianten "K1101" und "K1101 " abgefangen
+                     begin
+                       Prefix_Checkplan := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                       Prefix_Checkplan := trim(Prefix_Checkplan);
+                       Prefix_Checkplan := Prefix_Checkplan + '_';
+                     end;
+                  end;
+                end;  
+                {if Prefix_Checkplan = '' then   // V236: nach unten, da es so nicht funktioniert: es wird immer ZMR genommen
+                    begin
+                        Prefix_Checkplan := PREFIX_ZMR;
+                    end;}
+                if PMGruppe = '' then
+                begin
+                  if Pos('K1203', Datei[Zeile]) > 0 then
+                  begin
+                     PMGruppe := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     PMGruppe := trim(PMGruppe);
+                  end;
+                end;  
+              Zeile:=Zeile+1;
+           end; //--- Zeile < Datei.Count
+           //--- Tests
+           Prefix_Checkplan := Prefix_Checkplan;
+           Checkplan := Checkplan;
+           PMGruppe := PMGruppe;
+           Part := Part ;
+           Order := Order;
+           Checkplan :=  Checkplan;
+           ProcessLabel := ProcessLabel;
+           //====================================
+           if Prefix_Checkplan = '' then  // V236: hier rein, da es nur so funktioniert, dass auch der Inhalt von K1101 genommen wird
+              begin
+                Prefix_Checkplan := PREFIX_ZMR;
+              end;
+           //--- VORGABEN
+           //--- Part => Teil=<K1001> Leerzeichen müssen raus ist schon ok Bsp.: A2460302241
+           Part := Part ;
+
+           //--- Checkplan => Prüfplan=<K1101>_<K1002> Bsp.: ZMR_Andreas Maier_01 ist noch offen
+{
+           CheckplanTemp := Prefix_Checkplan + '_' + Checkplan;
+           Checkplan := CheckplanTemp;
+}
+           //--- ProcessLabel => Vorgang=<K1086>_<K1209>_<K1203> Bsp.: VORBEARBEITUNG_REKLAMATION_KMG prüfen
+           ProcessLabelSuffix := '_' + qsstat_uz + '_' + PMGruppe;
+           if Pos(ProcessLabelSuffix, D3ImportHeader.ProcessLabel) > 0  then
+           begin
+               ProcessLabel := UpperCase(ProcessLabel);
+               ProcessLabel := ProcessLabel + ProcessLabelSuffix;
+           end;
+                                                                                                
+           //--- Order => Auftrag=<K1001>_<Prüfplan> / Index Bsp.: A2460302241_ZMR_Andreas Maier_01 / 0 ist noch offen
+           // Prüfauftrag aus Part, Checkplan und ChechplanChangeLevel erstellen
+ {---
+           CCL := GetCheckplanChangeLevel(Checkplan);
+           if CCL > -1 then
+               Order := Part + '_' + Checkplan + ' / ' + IntToStr(CCL)
+           else
+               Order := Part + '_' + Checkplan + ' / ?';
+---}
+           //Test
+           CheckplanTemp :=  Order;
+           OrderBelegung := 'ZMR_DT';
+
+        end;
+         //--- of IF#41xx CALYPSO
+
+ // 20110331_js ---}
+ // {20110331_js
+        // ##########################################################################
+        4151: begin  //#20110331_js CALYPSO-PAC-ZMR-Anpassung (A. Maier, #0013239831)
+        // ##########################################################################
+        {->
+            Part         => Teil=<K1001> Leerzeichen müssen raus ist schon ok Bsp.: A2460302241
+            Checkplan    => Prüfplan=<K1101>_<K1002> Bsp.: ZMR_Andreas Maier_01 ist noch offen
+            ProcessLabel => Vorgang=<K1086>_<K1209>_<K1203> Bsp.: VORBEARBEITUNG_REKLAMATION_KMG prüfen
+            Order        => Auftrag=<K1001>_<Prüfplan> / Index Bsp.: A2460302241_ZMR_
+Andreas Maier_01 / 0 ist noch offen
+            K1001   Part  |  K1002   Checkplan  | K1086   ProcessLabel/Vorgang
+            K1209   zu holen
+            K1203   zu holen
+            K1101   zu holen
+        <-}
+
+           Zeile := 0;
+           qsstat_uz := '';
+           PMGruppe := '';
+           Prefix_Checkplan := '';                                     
+
+           while Zeile < Datei.Count do
+           begin
+               if qsstat_uz = '' then
+                  if Pos('K1209', Datei[Zeile]) > 0 then
+                  begin
+                     qsstat_uz := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     qsstat_uz := trim(qsstat_uz);
+                     qsstat_uz := DeleteSpaces(qsstat_uz); 
+                  end;
+                if Prefix_Checkplan = '' then
+                  if Pos('K1101', Datei[Zeile]) > 0 then
+                  begin
+                     Prefix_Checkplan := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     Prefix_Checkplan := trim(Prefix_Checkplan);
+                     Prefix_Checkplan := Prefix_Checkplan + '_';
+                  end;
+                if PMGruppe = '' then
+                  if Pos('K1203', Datei[Zeile]) > 0 then
+                  begin
+                     PMGruppe := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     PMGruppe := trim(PMGruppe);
+                  end;
+              Zeile:=Zeile+1;
+           end; //--- Zeile < Datei.Count
+                     //--- Tests
+           Prefix_Checkplan := Prefix_Checkplan;
+           Checkplan := Checkplan;
+           PMGruppe := PMGruppe;
+           Part := Part ;
+           Order := Order;
+           Checkplan :=  Checkplan;
+           ProcessLabel := ProcessLabel;
+
+           //--- VORGABEN
+           //--- Part => Teil=<K1001> Leerzeichen müssen raus ist schon ok Bsp.: A2460302241
+           Part := Part ;
+
+           //--- Checkplan => Prüfplan=<K1101>_<K1002> Bsp.: ZMR_Andreas Maier_01 ist noch offen
+{
+           CheckplanTemp := Prefix_Checkplan + '_' + Checkplan;
+           Checkplan := CheckplanTemp;
+}
+           //--- ProcessLabel => Vorgang=<K1086>_<K1209>_<K1203> Bsp.: VORBEARBEITUNG_REKLAMATION_KMG prüfen
+           ProcessLabelSuffix := '_' + qsstat_uz + '_' + PMGruppe;
+           if Pos(ProcessLabelSuffix, D3ImportHeader.ProcessLabel) > 0  then
+           begin
+               ProcessLabel := UpperCase(ProcessLabel);
+               ProcessLabel := ProcessLabel + ProcessLabelSuffix;
+           end;
+
+           //--- Order => Auftrag=<K1001>_<Prüfplan> / Index Bsp.: A2460302241_ZMR_Andreas Maier_01 / 0 ist noch offen
+           // Prüfauftrag aus Part, Checkplan und ChechplanChangeLevel erstellen
+ {---
+           CCL := GetCheckplanChangeLevel(Checkplan);
+           if CCL > -1 then
+               Order := Part + '_' + Checkplan + ' / ' + IntToStr(CCL)
+           else
+               Order := Part + '_' + Checkplan + ' / ?';
+---}
+           //Test
+           CheckplanTemp :=  Order;
+           OrderBelegung := 'ZMR_DT';
+
+        end;
+        //--- of IF#41xx CALYPSO
+
+        // ###############################################################################
+        4152, 4154, 4155, 4156: begin  //#20120813_js: QSStat - DFQ - Verbundbremsscheibe
+        // ###############################################################################
+        {->
+            Part         => Teil=<K1001> wird über Interface definiert + Leerzeichen müssen raus.
+            Checkplan    => Prüfplan=<K1101>_<K1002>
+            ProcessLabel => Vorgang=<K1086>_<K1209>_<K1203> Bsp.: VORBEARBEITUNG_REKL_KMG prüfen
+            Order        => Auftrag=<K1001>_<Prüfplan> / Index
+            *Vorgang     =  <K1086>_<Katalog aus K1209>_<K1203>
+            *Auftrag     =  <Part>_<Prüfplan> / Index
+            K1209   zu holen = qsstat_uz                             
+            K1203   zu holen = PMGruppe
+            K1101   zu holen = Prefix_Checkplan
+        <-}
+
+           Zeile := 0;
+           qsstat_uz := '';
+           PMGruppe := '';
+           Prefix_Checkplan := '';
+
+           while Zeile < Datei.Count do
+           begin
+               if qsstat_uz = '' then
+                  if Pos('K1209', Datei[Zeile]) > 0 then
+                  begin
+                     qsstat_uz := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     qsstat_uz := trim(qsstat_uz);
+                     qsstat_uz := DeleteSpaces(qsstat_uz); 
+                  end;
+                if Prefix_Checkplan = '' then
+                  if Pos('K1101', Datei[Zeile]) > 0 then
+                  begin
+                     Prefix_Checkplan := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     Prefix_Checkplan := trim(Prefix_Checkplan);
+                     Prefix_Checkplan := Prefix_Checkplan + '_';
+                  end;
+                if PMGruppe = '' then
+                  if Pos('K1203', Datei[Zeile]) > 0 then
+                  begin
+                     PMGruppe := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                     PMGruppe := trim(PMGruppe);
+                  end;
+              Zeile:=Zeile+1;
+           end; //--- Zeile < Datei.Count
+
+           //--- Dummies
+           D3ImportHeader.Checkplan := D3ImportHeader.Checkplan;
+           D3ImportHeader.Part := D3ImportHeader.Part ;
+           D3ImportHeader.Order := D3ImportHeader.Order;
+           D3ImportHeader.ProcessLabel := D3ImportHeader.ProcessLabel;
+           Prefix_Checkplan := Prefix_Checkplan;
+           PMGruppe := PMGruppe;  //--- Erfassart
+
+           //--- *Part* => <K1001> Leerzeichen müssen ggf. raus
+           D3ImportHeader.Part := DeleteSpaces(D3ImportHeader.Part);
+
+           //--- *Checkplan* => Prüfplan=<K1101><K1002>
+           //--- 20130403_js: Refresh-Schutz
+           //--- 20130408_js: ***Achtung*** generische Bearbeitung fuer den Checkplan im nachgelagerten Teil!
+           //---               deshalb hier auskommentiert!
+//           If Instr(1,D3ImportHeader.Checkplan, Prefix_Checkplan) = 0 then
+//                D3ImportHeader.Checkplan := Prefix_Checkplan + Checkplan;
+
+           //--- *Verwendungszweck* K1209 aus Katalogeintrag holen
+           qsstat_uz := GetAuftragschluessel(qsstat_uz);
+
+           //--- *ProcessLabel* => Vorgang=<K1086>_<K1209>_<K1203> Bsp.: VORBEARBEITUNG_REKL_KMG
+           If Instr(1,ProcessLabelSuffix, PMGruppe) = 0 then
+           begin
+              //--- nur wenn die Gruppe noch nicht im Vorgang enthalten ist -> Schutz vor Refresh
+              ProcessLabelSuffix := '_' + qsstat_uz + '_' + PMGruppe;
+              if Pos(ProcessLabelSuffix, D3ImportHeader.ProcessLabel) = 0  then
+              begin
+                  D3ImportHeader.ProcessLabel := UpperCase(ProcessLabel);    // uppercase (!)
+                  D3ImportHeader.ProcessLabel := D3ImportHeader.ProcessLabel + ProcessLabelSuffix;
+                  CSVCheck := 'j';  //--- um zu verhindern, dass unten noch mal der Vorgang/Processlabel gesetzt wird
+              end;
+           end;
+
+           //--- *HistorienIndex* wird global benutzt
+           OrderBelegung := 'ZMR_DT'; // use part_checkplan for order-index
+        end;  //--- of IF#4152 CALYPSO
+
+
+       //########################################################################################
+        4158: begin //Prüfplanimport mit XML für ADM
+        //########################################################################################
+        bolDone := false;
+        try
+           FList := TStringList.Create;
+           //FList.LoadFromFile(D3ImportHeader.Filename);  // das nicht ! s.nächste Zeile
+           FList.text := D3ImportHeader.HeaderLines; //!!! Das PLA-Interface zaubert die Datei so um, dass  Values funktioniert
+                                                      //    Values geht nur, wenn: ID=<Wert>
+           // Part !!!
+           D3ImportHeader.Part := FList.Values['TEIL']; //<TEIL>4711</TEIL>
+           // Checkplan !!!
+           D3ImportHeader.Checkplan := FList.Values['PRUEFPLAN']; //<PRUEFPLAN>xxxxx</PRUEFPLAN>
+           // Process
+           //D3ImportHeader.Process := FList.Values['VORGANG']; //<VORGANG>010</VORGANG>
+           // ProcessLabel
+           D3ImportHeader.ProcessLabel := FList.Values['VORGANGBEZ']; //<VORGANGBEZ>MFA1_OP070</VORGANGBEZ>
+           // VFELD03
+           D3ImportHeader.ProcessUserField[3] := FList.Values['VFELD03']; //<VFELD03>xxxxx</VFELD03>
+           // VFELD04
+           D3ImportHeader.ProcessUserField[4] := FList.Values['VFELD04']; //<VFELD04>xxxxx</VFELD04>
+           // VFELD05
+           D3ImportHeader.ProcessUserField[5] := FList.Values['VFELD05']; //<VFELD05>xxxxx</VFELD05>
+           { Nachfolgende Felder müssen nach dem Import direkt in der Datenbank aktualisiert werden!!!!!
+            // VFELD09
+            ProcessUserField[9] := FList.Values['VFELD09']; //<VFELD09>xxxxx</VFELD09>
+            // KOST_PROBENERSTELLUNG
+            ProcessUserField[7] := FList.Values['KOST_PROBENERSTELLUNG']; //<KOST_PROBENERSTELLUNG>xxxxx</KOST_PROBENERSTELLUNG>
+            // KOST_VORBEHANDLUNG
+            ProcessUserField[6] := FList.Values['KOST_VORBEHANDLUNG']; //<KOST_VORBEHANDLUNG>xxxxx</KOST_VORBEHANDLUNG>
+            // Vorgangbemerkung
+            ProcessUserField[8] := FList.Values['Vorgangbemerkung']; //<Vorgangbemerkung>xxxxx</Vorgangbemerkung>
+            }
+
+            //---  *TODO*:
+            //---  *TODO*: hier den Prüfplanprefix für das automatische Anlegen angeben.
+            D3ImportHeader.Checkplan :=  'ADM_' + D3ImportHeader.Part;
+            //---  *TODO*:
+
+            //--- gibt es das Teil nicht -> Anlegen!
+            if ExistPart(D3ImportHeader.Part) <> ecOK then
+            begin
+               PartObj := TPart.Create(nil);
+               try
+                 PartObj.Part := D3ImportHeader.Part;
+                 PartObj.Caption := D3ImportHeader.Part;
+                 SavePart(PartObj, scInsert);
+               finally
+                 PartObj.Free;
+               end;
+            end;
+
+            //--- gibt es den Pruefplan nicht nicht -> Anlegen!
+            if ExistCheckPlan(D3ImportHeader.Checkplan) <> ecOK then
+            begin
+               CheckplanObj := TCheckplan.Create(nil);
+               try
+                 CheckplanObj.Checkplan := D3ImportHeader.Checkplan;
+                 // CheckplanObj.PlanGroup := PruefplanGruppe;
+                 CheckplanObj.PlanKind := AArt_SPC;   //AArt_Alle=-1|AArt_Labor=0|AArt_PMU=1|AArt_Wareneingang=2|AArt_SPC=3|AArt_Warenausgang=4
+                 SaveCheckplan(CheckplanObj);
+               finally
+                 CheckplanObj.Free;
+               end;
+            end;
+
+            //--- Teil zum pruefplan zuordnen
+            AttachPlanToPart(D3ImportHeader.Part, D3ImportHeader.CheckPlan);
+
+            //--- Vorgaenge zum Pruefplan
+            if not CheckplanHasProcess(D3ImportHeader.Checkplan, D3ImportHeader.ProcessLabel) then
+            begin
+               ProcessObj := TCheckplanProcess.Create(nil);
+               try
+                 ProcessObj.Checkplan := D3ImportHeader.Checkplan;
+                 ProcessObj.Process := GetNextVorgangNr(D3ImportHeader.Checkplan);
+                 ProcessObj.ProcessLabel := D3ImportHeader.ProcessLabel;
+                 ProcessObj.MTarget := 0;
+                 ProcessObj.N := 1;
+                 ProcessObj.Inspectiontype := PrTyp_3DImport;
+                 AddCheckPlanProcess(ProcessObj);
+                 UpdateStichprobeninformationsSchema(ProcessObj.Checkplan, ProcessObj.Process, 10102);
+                 ReleaseCheckPlan(D3ImportHeader.Checkplan);
+               finally
+                 ProcessObj.Free;
+               end;
+            end;
+
+            //--- *Auftrag* mit HistorienIndex
+            CCL := GetCheckplanChangeLevel(D3ImportHeader.Checkplan);
+            //if CCL = -1 then
+               //CCL := 0;
+            if (CCL > -1) and (Instr(1, D3ImportHeader.Order, '/') = 0)  then
+                 //--- Index set
+                 D3ImportHeader.Order := D3ImportHeader.Order + ' / ' + IntToStr(CCL)
+            else If Instr(1, D3ImportHeader.Order, '/') = 0 then
+                 //--- Index not set
+                 D3ImportHeader.Order := D3ImportHeader.Order + ' / ?'
+            else
+                //--- Ignore, when refreshed
+                D3ImportHeader.Order := D3ImportHeader.Order;
+
+            bolDone := true;
+        finally
+          if not bolDone then
+              NewLogBookEntryEx(LOG_Batch_Fehler, 'Script. #IF4158','Prüfplanimport mit XML für ADM', 'Verarbeitungs-Fehler!', D3ImportHeader.Filename);
+          FList.Free;
+        end;
+        Prefix_Checkplan  := 'ADM';
+        Typ               := 'LEER';
+        Uebersetzung      := 'LEER';
+        UZ                := '';
+        PMGruppe          := 'SPC';
+        CSVCheck          := 'j';  // ist Processlabel im generellen Zweig zu setzen wenn = 'j'
+        ProcessLabelSuffix := '';
+        OrderBelegung     := 'ADM'; // Keine Ergänzung durchführen
+        Order := Checkplan + '_'  + ProcessLabel
+       end; //Prüfplanimport mit XML für ADM
+
+
+       //########################################################################################
+       4161: begin // PAC_VBS_Kistler CSV (4161) KURVEN         20130725_js
+       //########################################################################################
+         Zeile            := 0;
+         qsstat_uz        := 'SERIENPRÜFUNG'; //'Serie' geä. 20130730_js
+         PMGruppe         := 'EINPR';
+         Prefix_Checkplan := PREFIX_GFA;
+
+         //--- *Part* => <K1001> Leerzeichen müssen ggf. raus
+         D3ImportHeader.Part := DeleteSpaces(D3ImportHeader.Part);
+
+         //--- *Checkplan*
+         //--- 20130408_js: ***Achtung*** generische Bearbeitung (auch Checkplan) im nachgelagerten Teil!
+
+         //--- *ProcessLabel* => ähnl. Vorgang=<K1086>_<K1209>_<K1203> Bsp.: VORBEARBEITUNG_REKL_KMG
+         If Instr(1,ProcessLabelSuffix, PMGruppe) = 0 then
+           begin
+              //--- nur wenn die Gruppe noch nicht im Vorgang enthalten ist -> Schutz vor Refresh
+              ProcessLabelSuffix := '_' + qsstat_uz + '_' + PMGruppe;
+              if Pos(ProcessLabelSuffix, D3ImportHeader.ProcessLabel) = 0  then
+              begin
+                  D3ImportHeader.ProcessLabel := UpperCase(ProcessLabel);    // uppercase (!)
+                  D3ImportHeader.ProcessLabel := D3ImportHeader.ProcessLabel + ProcessLabelSuffix;
+                  CSVCheck := 'j';  //--- um zu verhindern, dass unten noch mal der Vorgang/Processlabel gesetzt wird
+              end;
+           end;
+
+           //--- *HistorienIndex* wird global benutzt
+           OrderBelegung := 'ZMR_DT'; // use part_checkplan for order-index
+
+        end;  //--- of IF-4161
+
+        //########################################################################################
+        4171: begin // "PAC-VAP_Prismo5_Calypso"  20140115_js
+        //########################################################################################
+            Prefix_Checkplan := PREFIX_VAP;
+
+            Zeile := 0;
+            while Zeile < Datei.Count do
+            begin
+              // UZ: K1209 Serie, Sonder, ...
+              if Pos('1209', Datei[Zeile]) > 0  then // gefunden
+              begin
+                UZ   := Copy(Datei[Zeile], Pos(' ', Datei[Zeile]) + 1, Length(Datei[Zeile]));
+                UZ   := GetAuftragschluessel(UZ);
+              end;
+              Zeile := Zeile + 1;
+            end;  //--- of w.hile                                                                                    
+
+            PMGruppe     := 'KMG';
+            Part         := DeleteSpaces(D3ImportHeader.Part);
+            Order        := D3ImportHeader.Order;
+            Checkplan    := D3ImportHeader.Checkplan;
+            ProcessLabel := D3ImportHeader.ProcessLabel;
+
+            //--- der prefix beinhaltet schon ein '_'
+            D3ImportHeader.Order := Part + '_' + Prefix_Checkplan + Checkplan;
+
+            //--- sonst wird fuer die Auftragsbildung nicht der korrekte Pruefplan gefunden! (erzeugt '/?' bei Index=0)
+            If (Pos(Prefix_Checkplan, checkplan) = 0) then
+                  D3ImportHeader.checkplan := Prefix_Checkplan + checkplan;
+
+            //--- die globale Auftrags-/Orderbelegung/Pruefplan mit Prefixbildung im unteren Teil ausschalten
+            CSVCheck                      := 'n';    //--- Vorgang im generischen Teil bilden.
+            istAuftragMitStdOrderbelegung := false;  //--- eigene Auftragsbildung im Interface
+            istPruefplanVeraendert        := true;   //--- Prefix soll nicht mehr zusaetzlich gesetzt werden
+
+            //--- VORGABEN:
+            //--- Part => Teil=<K1001> Leerzeichen müssen raus ist schon ok Bsp.: A2460302241
+            //--- Order => Auftrag= A2053322100_VAP_AS20521_LI_SW_OP10-20/1
+            //             Pruefauftrag aus <Part>_<Checkplan>/<ChechplanChangeLevel> ohne Spaces
+            //--- *Auftrag* mit HistorienIndex, ohne Leerzeichen!
+            CCL := GetCheckplanChangeLevel(D3ImportHeader.Checkplan);
+            if (CCL > -1) and (Instr(1, D3ImportHeader.Order, '/') = 0)  then
+                 //--- Index is set
+                 D3ImportHeader.Order := D3ImportHeader.Order + '/' + IntToStr(CCL)
+                       
+            else If Instr(1, D3ImportHeader.Order, '/') = 0 then
+                 //--- Index not set, when CCL=-1 (pruefplan neu angelegt)
+                 D3ImportHeader.Order := D3ImportHeader.Order + '/?'
+
+            else
+                //--- Ignore, when refreshed
+                D3ImportHeader.Order := D3ImportHeader.Order;
+
+        end; // "PAC-VAP_Prismo5_Calypso"
+        // ##################################################
+        4176: begin  // Import von QDA-DFQ-Export
+             Prefix_Checkplan := '';
+             UZ := '';                                                           
+             PMGruppe := '';                                                  
+             CSVCheck := 'n';  // Vorgang belassen
+             OrderBelegung := 'AftNr_ist_PP';    
+
+        end;     // Import von QDA-DFQ-Export
+        // ##################################################
+        4182: begin  // Import von QDA-DFQ-Export AS213
+             Prefix_Checkplan := '';
+             UZ := '';                                                           
+             PMGruppe := '';                                                  
+             CSVCheck := 'n';  // Vorgang belassen
+             OrderBelegung := 'AftNr_ist_PP';    
+
+        end;     // Import von QDA-DFQ-Export
+
+         // ##################################################
+        4180: begin  // Import von GPA Zeiss Contour   ASP: Adrain Kansy  ABOEG, V2.10
+             // wenn K1086 leer, dann 'OPXX'
+             // K1203 + K1209 nicht beachten
+             Prefix_Checkplan := PREFIX_GFA;
+             UZ := 'Serie';              
+             PMGruppe := 'SPC'; 
+             if(length(D3ImportHeader.ProcessLabel) < 1) then
+               D3ImportHeader.ProcessLabel := 'OPXX';
+           
+             CSVCheck := 'n';  // Vorgang belassen
+             // OrderBelegung := 'AftNr_ist_PP';   
+             OrderBelegung := 'AftNr_ist_Part+Checkplan';   // V2.12   
+
+        end;     // Import von QDA-DFQ-Export
+        // ##################################################
+
+        4183: begin  // Import von WP Welding Expert   ASP: Erika Zimmermann  ABOEG, V2.14
+             Prefix_Checkplan := '';
+             UZ := 'Serie';              
+             PMGruppe := 'SPC'; 
+             OrderBelegung := 'ADM';   // V2.14   
+
+        end;     // Import von QDA-DFQ-Export
+        
+        // ##################################################        
+        5003: begin  // DFQ 3.0 -  Spezialfall IQPRo ANA Erfassung vom Standard ausschliessen
+            //Verzeichnis: ..eingang\PAC\QDA IN\ANA\
+            ExcludeFromIFHandling := true;     
+
+            //--- *Part* => Leerzeichen müssen ggf. raus
+            //D3ImportHeader.Part := DeleteSpaces(D3ImportHeader.Part);         
+            
+        end;     
+        
+       //########################################################################################
+       /// .... naechste Interface hier ...
+       //########################################################################################
+
+      end; //--- of case InterfaceCfgNo
+
+      // ####################################################
+      // IQ-Pro2-Sonderbehandlung: Prüfplan-Index fuer IF 29
+      // ####################################################
+      //
+      // --- *ACHTUNG*: der ELSE-Zweig wird generisch auf alle Interface angewendet!
+      //
+      if InterfaceType = 29 then
+       //--- IQ-Pro2: Prüfplan-Stand und -Index für alle IQ-Pro2-Interfaces ermitteln:
+       begin
+           PAVersion := Datei.Values['PA-Version'];
+           CCL := GetCheckplanChangeLevel(Checkplan);
+           ReadHisto(Checkplan, ProcessLabel, PAVersion, Stand, CCL);
+           D3ImportHeader.Drawing := Stand;
+           OrderBelegung := 'IQ-PRO2';
+       end   //--- of Sonderbehandlung fuer IQPRO i.f #29
+      else if ExcludeFromIFHandling then 
+        // Sonderbehandlung IQPro - ANA Erfassung         
+        istAuftragMitStdOrderbelegung := false; 
+        //--- sonst nicht weiter tun       
+      else
+       //--- *ACHTUNG*: hier im else-Zweig: wirkt fuer *alle Anderen* mit InterfaceInterfaceTyp <> 29
+       begin
+         If (Pos(Prefix_Checkplan, checkplan) = 0) and (istPruefplanVeraendert = false) then
+            checkplan := Prefix_Checkplan + checkplan;
+         {.**********************************************************************
+           * Vorgang: Immer PMGruppe ergänzen. Ergänzungen nur einmal (Refresh!)*
+           **********************************************************************
+           * Schalter "CSVCheck = 'j'" verhindert Überschreiben des Vorganges   *
+           **********************************************************************.}
+         If (Pos(UZ,ProcessLabel) = 0) then
+          begin
+           If (CSVCheck <> 'j') then
+            begin
+             ProcessLabel := ProcessLabel + '_' + UZ + '_' + PMGruppe;
+           end;
+         end;
+         CCL := GetCheckplanChangeLevel(Checkplan);
+      end;  // IQ-PRO2-Sonderbehandlung
+
+      ///////////////////////////////////////////////////////////////////////////////////////////
+      if istAuftragMitStdOrderbelegung then                                        
+       //--- Abhandlung der Auftragsbildung fuer (fast) alle Interface                             
+       begin
+            //--- Sonderbehandlung: Auftrag, wenn <OrderBelegung> gesetzt ist
+            //--- *** Die Ausnahmen von den Ausnahmen!
+            if OrderBelegung = 'STANDARD' then
+               OrderStr := Part
+            else if (OrderBelegung = 'GH_Marposs')
+             or (OrderBelegung = 'QS-Torque')
+             or (OrderBelegung = 'IPM-PLA')
+             or (OrderBelegung = 'Frenco_Polaris_Jenoptik')
+             or (OrderBelegung = 'ZMR_DT')
+             or (OrderBelegung = 'PAC/SFE Claas ITG') //jb: 20131104 
+             or (OrderBelegung = 'VAP_Calypso') //ab: 20150304
+             or (OrderBelegung = 'AftNr_ist_Part+Checkplan') //ab: 20150327             
+            then                                      
+             begin
+                OrderStr := Part + '_' + Checkplan;
+                // 5.6.09: Bög: Auftragsnummer wurde zu lang. Mal nur hier die Blanks rausschmeissen
+                if ((OrderBelegung = 'QS-Torque') OR 
+                    (OrderBelegung = 'PAC/SFE Claas ITG'))    then   // V2.25 ABOEG: ITG auch in DeleteSpaces reingenommen
+                    OrderStr := DeleteSpaces (OrderStr);                          
+             end
+            else if OrderBelegung = 'AftNr_ist_PP' then
+               OrderStr := Checkplan
+            else if OrderBelegung = 'Werth_Klingelnberg' then     // V2.14, ABOEG, WIRD NICHT MEHR GEBRAUCHT (JETZT K0053) Schweinkram: Aft-Nr ist in TeileIdent Pos 1-5, Bsp: 47114-16345
+              begin
+                if pos ('-', Obligatory[1]) = 6 then
+                begin
+                  // AftNr := copy (1, 5, Teile-Ident)
+                  OrderStr := copy (1, 5, Obligatory[1]);        
+                  Orderbelegung := 'ADM';
+                end  
+                else
+                  OrderStr := Part + '_' + Checkplan;
+              end
+            else if OrderBelegung = 'IQ-PRO2' then
+               OrderStr := Part + '_' + ProcessLabel;   
+
+           //--- Auftragsbildung: fuer alle ausser <ADM> wird der Auftrag versioniert
+           if OrderBelegung <> 'ADM' then //#roe100317
+           begin                                                                                                  
+              if CCL > -1 then
+                 Order := OrderStr + ' / ' + IntToStr(CCL);
+              else                       
+                 Order := OrderStr + ' / ?';
+
+              // V2.4  ABOEG, 25.09.2015 wg. QS-Torque und Sonderfall: "HAG200/215/240_GPA_UNI-S/HAG200/215/240 /"  => Vorsicht: 41 Zeichen
+              Order := TrimRight (Order);   // TrimRight bringt nichts, da "/" am Ende + Leerzeichen am Ende geht nicht: "A24637220245320_ZMR_alt24620_a_Sonder / "
+              // Order := DeleteSpaces (Order);  // V2.47 ABOEG 11.08.2020: Leerzeichen am Ende weg, da QDA beim AuftragAnlegen das Leerzeichen entfernt
+                                                 //                         KuFri-Lösung, da TrimRight nicht funktionierte
+              
+              if OrderBelegung = 'QS-Torque' then    // beim Anlegen wird auf 40 Zeichen beschnitten und dann steht ein Leerzeichen am Ende, das auch noch wegfliegt
+                 Order := DeleteSpaces (Order);      // Links: "HAG200/215/240_GPA_UNI-S/HAG200/215/240 "  => Rechts: "HAG200/215/240_GPA_UNI-S/HAG200/215/240"
+           end;                                      //  QDA zeigt im Importpuffer links die Aft-Nr. mit Leerzeichen, rechts ist die Aft-Nr. leer, weil beim Anlegen
+      end                                            //  des Auftrags das Blank weggenommen wird. Dann kommt die Fehlermeldung: Auftrag bereits vorhanden.
+     else
+      begin
+        //istAuftragMitStdOrderbelegung = false
+        //; // ignore, weil im Interface gebildet!
+      end;
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    end; //of w.ith
+
+  finally                                                         
+    Datei.Free;    // muss so sein!
+
+  end; // of t.ry
+
+end; // of procedure
+//--------------------------------------------------------------------------
+procedure CorrectDFQFileEnding( aFilename : string);
+var 
+    ThisProc : string; 
+    Datei    : TStringList;    
+begin
+    try   
+        ThisProc := 'CorrectQsstatFileEnding'  
+        if FileExists(afilename) then 
+        begin                                                                  
+            Datei := TStringList.Create;
+            Datei.LoadFromFile(aFileName);
+            //Datei.Append (SaveToFile macht das automatisch: #0 => #13#10);        
+            Datei.SaveToFile(aFileName);                
+        end
+        else
+        begin   
+            //--- konnte Datei nicht finden? 
+            NewLogBookEntryEx(LOG_Warnung, THISPROC, 'Datei-Fehler', '... nicht gefunden?', aFileName);
+        end; 
+        
+    finally    
+      Datei.Free;                                  
+    end;  // fehlendes CRLF ergänzen: ABOEG
+end;  
+//--------------------------------------------------------------------------
+procedure BeforeOpenFile(aFileName: String; var aAllowImport: Boolean);  
+var                                                                     
+    ThisProc                : String; 
+    value                   : String;
+    FileSize_CSV            : int64;
+    FileSize                : int64;                                                       
+    CheckFileSizeNOT_OK     : boolean;
+    strImportFile           : string;
+    strImportPath           : string; 
+    strTargetFile_Stufe1    : string; 
+    strTargetFile_HA        : string; 
+    strTargetFile_VA        : string;     
+    strTargetPath_HA        : string;                                        
+    strTargetPath_VA        : string;
+    strSrcTriggerSearch_VA  : string;
+    strSrcTriggerSearch_HA  : string;
+    isPLAWeiterleitung      : string;        // V2.21
+    isAchsKriterium         : boolean;                                                        
+    isVorderAchse           : boolean;
+    isHinterAchse           : boolean;                       
+    isErkennungMitAchsenTyp : boolean;                                
+    wasSuccessfullyCopied   : boolean;                                 
+    res                     : int64;
+    strK1001                : string; 
+    TriggerString           : string;
+    strK1002                : string; 
+    strK0014                : string;
+    strK1209                : string;      // V2.24
+    isIdentInK0014          : boolean;      
+//    Datei                   : TStringList; 
+    Zeile                   : integer; 
+  
+Begin                                                                                                                  
+      ThisProc := 'BeforeOpenFile';              
+//    Datei    := TStringList.Create; 
+      
+      // fehlendes CRLF ergänzen: ABOEG: DFQ-IF liest sonst fehlerhaft ein !  (Bsp: PAC: SFE-ITG-MRA-Kopplungen) 
+      // Alternative: IF: Reiter qs-STAT: Häkchen setzen: "K00xx als Kopfzeilen ignorieren" 
+      // 2. Alternative: Bei DFQ immer ein CRLF an die Datei hängen. Ok wenn nötig. Falls nicht, stört es nicht. 
+      try  
+
+        if (D3ImportHeader.InterfaceType = 15) then
+        begin 
+            //--- for qsStat 3.0 only 
+            CorrectDFQFileEnding(aFilename);
+        end;                               
+  
+//        Datei.LoadFromFile(aFileName);
+//
+//        Zeile := 0;
+//        while Zeile < Datei.Count do
+//        begin
+//        
+//          if (D3ImportHeader.InterfaceType = 15) then
+//          begin 
+//            Datei[Zeile] := replacestr(Datei[Zeile], '#0', '#13#10');
+//          end;          
+//                                                      
+//          Zeile := Zeile + 1;
+//        end;
+//        Datei.SaveToFile(aFileName);
+      
+    finally
+//      Datei.Free;                                  
+    end;  // fehlendes CRLF ergänzen: ABOEG
+    case D3ImportHeader.InterfaceCfgNo of
+        //--- KMG-DFQ-Dateien Weiterleitung an PLA mit IF: 4123, nur wenn Ident in Datei vorhanden
+        4123, 4149, 4171, 5000:  // IF: 4123    (PAC-ACM_Calypso_RT  ) 5000 = Test   // VAP KMG prismo   AS/RT:   4149, 4171                                                
+          begin                                                                                                 
+            aAllowImport := False;                                                                                                        
+            wasSuccessfullyCopied := False;                                                                                                                                 
+            strImportFile := aFileName; 
+
+            // --- nur Stufe 1: ohne Achsentyp, nur in ein Verzeichnis kopieren (Stufe1)           
+            // isErkennungMitAchsenTyp := False; 
+            // V2.19 ABOEG
+            // --- Stufe 2 für VA/AS + HA/RT umgesetzt
+            isPLAWeiterleitung      := true;   // V2.21         
+            isErkennungMitAchsenTyp := true;
+            isIdentInK0014          := False;
+            isVorderAchse           := false;                             
+            isHinterAchse           := false;            
+            
+            //--- pruefe filename
+            if not FileExists(strImportFile) then                 
+                NewLogBookEntryEx(LOG_Batch_Fehler, 'Script. #IF4123/4149/4171','Kopie an PLA', 'Verarbeitungs-Fehler! Datei fehlt', strImportFile);
+            
+            //--- 20160322_js: pruefe auf K0014 vorhanden, sonst nicht an PLA weiterleiten!
+            isIdentInK0014 := CheckK0014Presence(strImportFile); 
+            
+             //--- Verzeichnisse setzen fuer HA=Hinterachse und VA=Vorderachse                  
+            strImportPath := ExtractFilePath(strImportFile);  
+            strTargetPath_HA := strImportPath + '..\QDA_Out_PLA_HA__RT\' ; // Achtung: spaeter auf absoltuen Pfad achten.
+            strTargetPath_VA := strImportPath + '..\QDA_Out_PLA_VA__AS\' ;                        
+            
+            // V2.21, ABOEG: Daten, die vom IMPORTPUFFER aus importiert werden, nicht mehr berücksichtigen
+            //               da diese beim ersten Importversuch schon an PLA weitergereicht wurden
+            if Instr(1,strImportPath, 'IMPORTED') > 0 then
+               isPLAWeiterleitung := false;
+
+            // V2.24, ABOEG: NUR Untersuchungszweck Serienmessung K1209 = 01   weiterleiten
+            strK1209 := GetKFeld1209FromDatei(strImportFile);
+            if Instr(1,strK1209, '01') <= 0 then
+               isPLAWeiterleitung := false;
+               
+            //--- da in Stufe 1 noch keine Unterscheidung auf AchsenTyp erfolgt, nur in ein Verzeichnis kopieren.
+            //--- \\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\ACM_Accura_RT    
+            //--- geht nur mit absolutem Pfad !!   
+            strTargetFile_Stufe1 := '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\QDA_Out_PLA_HA__PAC-ACM_Calypso_RT\' + ExtractFileName(strImportFile);     
+                                          
+            if isPLAWeiterleitung and isErkennungMitAchsenTyp then    // V2.21: isPLAWeiterleitung hinzugefügt
+            begin   
+                //--- fuer Stufe-2: Vorbereitung auf AchsenTyp-Unterscheidung        
+                //--- trifft Suchkriterium VA/HA zu?                                           
+                //--- Suchkriterien noch nicht bekannt, evtl. auf K1002 vorbelegen?                                            
+                strSrcTriggerSearch_VA := '332';   // (VA/AS)
+                strSrcTriggerSearch_HA := '357';   // (HA/RT)
+                
+                strK1001 := GetKFeld1001FromDatei(strImportFile); 
+                strK1001 := DeleteSpaces (strK1001);         
+                if strK1001 <> '' then  // isAchsKriterium: AxxxYYYzzzz: YYY = 357 (VA/AS) | YYY = 332 (HA/RT)                                                                                                                 
+                begin
+                    TriggerString := Copy(strK1001, 5, 3);   // Axxx357xxx
+                    isAchsKriterium := ( (Instr(1,TriggerString, strSrcTriggerSearch_HA) > 0 ) or ((Instr(1,TriggerString, strSrcTriggerSearch_VA))) ); 
+                end
+                else
+                begin
+                    NewLogBookEntryEx(LOG_Warnung,ThisProc,'Kein AchsKriterium gefunden!', strSrcTriggerSearch_VA + ': K1001 (VA)', strImportFile);
+                    NewLogBookEntryEx(LOG_Warnung,ThisProc,'Kein AchsKriterium gefunden!', strSrcTriggerSearch_HA + ': K1001 (HA)', strImportFile);
+                end;
+                                         
+                //--- HA oder VA ?                                                                                                                
+                isVorderAchse   := Instr(1,TriggerString, strSrcTriggerSearch_VA) > 0;
+                isHinterAchse   := Instr(1,TriggerString, strSrcTriggerSearch_HA) > 0;
+                
+              try  // V2.20 ABOEG          
+                //--- Aktion:  Kopieren bevor QDA-Import zuschlägt. (20160322_js: nur wenn Ident da, kopieren)                            
+                if ( (isAchsKriterium) and (isVorderAchse) and (isIdentInK0014) ) then 
+                begin        
+                    isVorderAchse := true;                             
+                    isHinterAchse := false;
+                    //--- copy to                            
+                    strTargetFile_VA := strTargetPath_VA + ExtractFileName(strImportFile);          
+                    CopyFileByStream(strImportFile, strTargetFile_VA);
+                    NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-VA/AS', 'Script-Stufe2::try', strImportFile);
+                end
+                else
+                    NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-HA/RT', 'Script-Stufe2: Nicht kopiert, kein K0014!', strImportFile);                     
+                
+                if ((isAchsKriterium) and (isHinterAchse) and (isIdentInK0014) ) then 
+                begin        
+                    isVorderAchse := false;                                                            
+                    isHinterAchse := true;                  
+                    //--- copy to                                                           
+                    strTargetFile_HA := strTargetPath_HA + ExtractFileName(strImportFile);
+                    CopyFileByStream(strImportFile, strTargetFile_HA);
+                    NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-HA/RT', 'Script-Stufe2::try', strImportFile); 
+                end
+                else
+                    NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-HA/RT', 'Script-Stufe2: Nicht kopiert, kein K0014!', strImportFile);
+              finally
+                NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-HA/RT', 'Script-Stufe2::finally', strTargetFile_Stufe1);
+              end;             
+            end
+            else                                                             
+            begin     // Stufe 1 nur für RT/Accura - jetzt NICHT mehr aktiv !!!
+               try 
+                 if isPLAWeiterleitung and isIdentInK0014 and D3ImportHeader.InterfaceCfgNo = 4123 then   // !!!!!!!!!!!!!!!!! V2.19 ABOEG: 4123 rein
+                 begin                                                                                    // V2.21: isPLAWeiterleitung hinzugefügt
+                   //--- Stufe-1: reine Kopie in Verzeichnis ohne Unterscheidung
+                   CopyFileByStream(strImportFile, strTargetFile_Stufe1);
+                   NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-IF4123', 'Script-Stufe1::try', strImportFile);
+                 end
+                else 
+                   NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-IF4123', 'Nicht kopiert, kein K0014!', strImportFile);                    
+              finally                               
+                 NewLogBookEntryEx(LOG_Hinweis, ThisProc, 'Kopieren-IF4123', 'Script-Stufe1::finally', strTargetFile_Stufe1);
+              end;
+            end;           
+         end; //--- of interface                                                                                                 
+    end; //--- of c.ase  
+    
+    aAllowImport := True; 
+    
+End; 
+
+//--------------------------------------------------------------------------
+// Datei-Inhalt auf K1001 = HA/RT (Axxx357xxxx) oder VA/AS (Axxx332xxxx) pruefen?   // V2.19 ABOEG
+function GetKFeld1001FromDatei(datenDatei : string) : string; 
+var
+    FileContentList : TStringList;  
+    ThisProc        : String; 
+    strK1001        : String; 
+    Zeile           : Integer;  
+Begin                                                                                              
+  try                                                                                              
+    ThisProc := 'DateiToStringList'; 
+    strK1001 := ''; 
+    Zeile := 0; 
+    FileContentList := TStringList.Create;
+    if FileExists(datenDatei) then                     
+    begin
+        FileContentList.LoadFromFile(datenDatei);           //--- Datei-Inhalt einlesen     
+        if FileContentList.count > 0 then
+        begin
+            while Zeile < FileContentList.Count do                                           
+            begin                               
+                if strK1001 = '' then
+                begin                                                             
+                    strK1001 := GetKFeld(FileContentList[Zeile], 'K1001');                                                                   
+                end; 
+               Zeile := Zeile + 1;      
+            end; //--- while                             
+        end
+        else
+          NewLogBookEntryEx(LOG_Warnung,ThisProc,'DatenDatei!', '0 Zeilen!', datenDatei);
+    end
+    else         
+      NewLogBookEntryEx(LOG_Warnung, ThisProc, 'DatenDatei', 'nicht gefunden!', datenDatei);
+          
+    Result := strK1001;     
+  finally
+    FileContentList.Free; 
+  end; 
+End; 
+
+//--------------------------------------------------------------------------
+// Datei-Inhalt auf K1002 = VA oder HA pruefen?
+function GetKFeld1002FromDatei(datenDatei : string) : string; 
+var
+    FileContentList : TStringList;  
+    ThisProc        : String; 
+    strK1002        : String; 
+    Zeile           : Integer;  
+Begin                                                                                              
+  try                                                                                              
+    ThisProc := 'DateiToStringList'; 
+    strK1002 := ''; 
+    Zeile := 0; 
+    FileContentList := TStringList.Create;
+    if FileExists(datenDatei) then                     
+    begin
+        FileContentList.LoadFromFile(datenDatei);           //--- Datei-Inhalt einlesen     
+        if FileContentList.count > 0 then
+        begin
+            while Zeile < FileContentList.Count do                                           
+            begin                               
+                if strK1002 = '' then
+                begin                                                             
+                    strK1002 := GetKFeld(FileContentList[Zeile], 'K1002');                                                                   
+                end; 
+               Zeile := Zeile + 1;      
+            end; //--- while                             
+        end
+        else
+          NewLogBookEntryEx(LOG_Warnung,ThisProc,'DatenDatei!', '0 Zeilen!', datenDatei);
+    end
+    else         
+      NewLogBookEntryEx(LOG_Warnung, ThisProc, 'DatenDatei', 'nicht gefunden!', datenDatei);
+          
+    Result := strK1002;     
+  finally
+    FileContentList.Free; 
+  end; 
+End; 
+
+//--------------------------------------------------------------------------
+// Datei-Inhalt auf K1209 = VA oder HA pruefen?    // V2.24   ABOEG
+function GetKFeld1209FromDatei(datenDatei : string) : string; 
+var
+    FileContentList : TStringList;  
+    ThisProc        : String; 
+    strK1002        : String; 
+    Zeile           : Integer;  
+Begin                                                                                              
+  try                                                                                              
+    ThisProc := 'DateiToStringList'; 
+    strK1002 := ''; 
+    Zeile := 0; 
+    FileContentList := TStringList.Create;
+    if FileExists(datenDatei) then                     
+    begin
+        FileContentList.LoadFromFile(datenDatei);           //--- Datei-Inhalt einlesen     
+        if FileContentList.count > 0 then
+        begin
+            while Zeile < FileContentList.Count do                                           
+            begin                               
+                if strK1002 = '' then
+                begin                                                             
+                    strK1002 := GetKFeld(FileContentList[Zeile], 'K1209');                                                                   
+                end; 
+               Zeile := Zeile + 1;      
+            end; //--- while                             
+        end
+        else
+          NewLogBookEntryEx(LOG_Warnung,ThisProc,'DatenDatei!', '0 Zeilen!', datenDatei);
+    end
+    else         
+      NewLogBookEntryEx(LOG_Warnung, ThisProc, 'DatenDatei', 'nicht gefunden!', datenDatei);
+          
+    Result := strK1002;     
+  finally
+    FileContentList.Free; 
+  end; 
+End; 
+
+//--------------------------------------------------------------------------
+// Datei-Inhalt auf K1014 pruefen, wenn vorhanden, dann true zurueckgeben.
+function CheckK0014Presence(datenDatei : string) : boolean; 
+var
+    FileContentList : TStringList;  
+    ThisProc        : String; 
+    strK0014        : String; 
+    Zeile           : Integer;
+    isFieldEmpty  : boolean;      
+    isFieldLengthOk : boolean;                                          
+    
+Begin                                                                                              
+  try                                                                                              
+    ThisProc := 'CheckK1014Presence'; 
+    strK0014 := '';                                                                                                                                  
+    Zeile    := 0; 
+    isFieldLengthOk := False;   
+    isFieldEmpty := False; 
+    
+    FileContentList := TStringList.Create;
+    if FileExists(datenDatei) then                     
+    begin
+        FileContentList.LoadFromFile(datenDatei);           //--- Datei-Inhalt einlesen     
+        if FileContentList.count > 0 then
+        begin
+            while Zeile < FileContentList.Count do                                           
+            begin                               
+                if strK0014 = '' then
+                begin                                                                                  
+                    strK0014 := GetKFeld(FileContentList[Zeile], 'K0014');                                                                   
+                end; 
+               Zeile := Zeile + 1;      
+            end; //--- while        
+        end
+        else                                                                                                        
+          NewLogBookEntryEx(LOG_Warnung,ThisProc,'DatenDatei!', '0 Zeilen!', datenDatei);
+    end                                                                                                        
+    else         
+      NewLogBookEntryEx(LOG_Warnung, ThisProc, '[4123] Daten-Datei', '[K0014] nicht gefunden!', datenDatei);  
+      
+    //--- Kriterium_1: getkfeld liefert "!nicht definiert!"-Token, wenn leer! 
+    isFieldEmpty := (Instr(1,strK0014,'!NICHT_DEFINIERT!') > 0)       
+    //---Kriterium_2: pruefen ob Ident in K0014 vorhanden + Inhalt hat.
+    isFieldLengthOk := (Length(strK0014) > 0);   
+                         
+  finally                                                                           
+    Result := (isFieldLengthOk and not isFieldEmpty);           
+    FileContentList.Free;                                                                                                                                                          
+  end;        
+  
+End; // CheckK0014Presence
+
+//--------------------------------------------------------------------------
+// e-mail-Versand bei Tol-/EGG-Verletzer     // V2.37
+//    Sobald ein EGG Verletzer aufgetreten, wird der Eintrag in Dat_MessungDaten markiert:
+//    In das "AC"-Feld wird ein "M" hinterlegt.
+//    Man kann im Eventmanager nun als Auslösebedingung schreiben
+//    AC = '', dann wird nur einmalig eine Aktion ausgelöst beim EGG-Verletzer.
+procedure UpdateAC(aSampleNo: Integer);     // V2.37
+var
+  QuUpdate: TddwQuery;
+begin
+  QuUpdate := TddwQuery.Create(nil);
+  try
+    QuUpdate.DatabaseName := 'QDA8';
+    QuUpdate.Sql.Add('Update DAT_MESSUNGDATEN');
+    QuUpdate.Sql.Add('set AC = :AC');
+    QuUpdate.Sql.Add('where PRFNR = :PRFNR ');
+    QuUpdate.Sql.Add('and ((AC = '''') or (AC is null))');
+    QuUpdate.ParamByName('PRFNR').AsInteger := aSampleNo;
+    QuUpdate.ParamByName('AC').AsString := AC_CHAR;
+    QuUpdate.ExecSQL;
+  finally
+    QuUpdate.Free;
+  end;
+end;
+
+//--------------------------------------------------------------------------
+function SendeMail(aBetreff: String; aVerteiler: string; aBody: String): Boolean;    // V2.37  // V2.38  // V2.40
+const                                           
+ THIS_PROC_NAME = 'SendeMail';                       
+
+begin   
+  Result := False;
+  try                                                                                                      
+    
+    SendEmailToMailinglist(cAbsenderName, cAbsenderMail, aBetreff, aVerteiler, aBody);    // V2.38 // V2.40
+    Result := True;
+ except
+    NewLogBookEntryEx(LOG_Fehler, THIS_SCRIPT_NAME, THIS_PROC_NAME, ' Mailversand scheitert! Verteiler: ' + aVerteiler, 'Fehler.');
+ end; 
+end;                                                              
+
+//--------------------------------------------------------------------------                                               
+procedure CreateEMailEGGVerletzer(aSampleNo: Integer);    // V2.37
+var                                                          
+  qry       : TddwQuery;                                                
+  vbodyText : string;
+  vbodyText1: string;
+  vbodyText2: string;
+  sBetreff  : string;
+  sVerteiler: string;
+  sVerteileroKST: string;
+  sKst      : string;
+  KennungTOLVerletzer: int;
+  KennungEGGVerletzer: int;
+  vbodyTextMMTOL: string;
+  vbodyTextMMEGG: string;  
+begin
+  vbodyText := '';  
+  try        
+    qry := TddwQuery.Create(nil);                             
+    qry.DatabaseName := 'QDA8';    
+    qry.SQL.Clear;                                                                               
+    qry.Sql.Add('SELECT STDAUFTRAG.TEIL, STDAUFTRAG.PRUEFPLAN,STDPPLANVORGANGHISTO.VORGANGBEZ, STDPPLANVORGANGHISTO.VFELD01,');
+    qry.Sql.Add('STDPPLANVORGANGMERKMALHISTO.MERKMALBEZ,STDPPLANVORGANGMERKMALHISTO.DOKUPFLICHT, DATUM, X1, X30, VALOT, VALUT, STDPPLANVORGANGMERKMALHISTO.OEGX, STDPPLANVORGANGMERKMALHISTO.UEGX ');
+    qry.Sql.Add('from VIEW_MESSUNGDATEN, STDAUFTRAG, STDPPLANVORGANGMERKMALHISTO, STDPPLANVORGANGHISTO ');              
+    qry.Sql.Add('where STDAUFTRAG.AUFTRAG = VIEW_MESSUNGDATEN.SUCH1');
+    qry.Sql.Add('AND STDPPLANVORGANGMERKMALHISTO.PRUEFPLAN = STDAUFTRAG.PRUEFPLAN');
+    qry.Sql.Add('AND STDPPLANVORGANGMERKMALHISTO.AENDINDEX = STDAUFTRAG.PRUEFPLANINDEX');
+    qry.Sql.Add('AND STDPPLANVORGANGMERKMALHISTO.VORGANG = VIEW_MESSUNGDATEN.SUCH2');
+    qry.Sql.Add('AND STDPPLANVORGANGMERKMALHISTO.MNR = VIEW_MESSUNGDATEN.MNR');
+    qry.Sql.Add('AND STDPPLANVORGANGHISTO.PRUEFPLAN = STDAUFTRAG.PRUEFPLAN');
+    qry.Sql.Add('AND STDPPLANVORGANGHISTO.VORGANG = VIEW_MESSUNGDATEN.SUCH2');
+    qry.Sql.Add('AND STDPPLANVORGANGHISTO.AENDINDEX = STDAUFTRAG.PRUEFPLANINDEX');
+    qry.Sql.Add('AND PRFNR= :PRFNR AND ((X30 BETWEEN -4 AND -2))');    // Bew_EggNio(-2), Bew_TolNio(-3) und Bew_EggTolNio(-4) 
+    qry.Sql.Add('AND (STDPPLANVORGANGMERKMALHISTO.DOKUPFLICHT = ''DS'' OR STDPPLANVORGANGMERKMALHISTO.DOKUPFLICHT = ''Ds'' )');
+    // qry.Sql.Add('and STDAUFTRAG.pruefplan = ''ACM-VA_ZS-231 4x2 AMG'' ');
+    qry.Sql.Add('AND ((AC = '''') or (AC is null))');
+    
+    qry.ParamByName('PRFNR').AsInteger := aSampleNo;
+    
+    sVerteileroKST := 0;    
+    KennungTOLVerletzer := 0;
+    KennungEGGVerletzer := 0;
+    vbodyTextMMTOL := '';
+    vbodyTextMMEGG := '';
+    
+    qry.Open;    
+    if not (qry.Eof and qry.Bof) then
+    begin
+      while not qry.EOF do
+      begin
+        // V2.44: totale Umstrukturierung
+        if ((qry.FieldByName('X30').AsInteger = -3) or (qry.FieldByName('X30').AsInteger = -4)) then  // V2.40 Tol
+        begin
+          KennungTOLVerletzer := 1;
+          // vbodyTextMMTOL := vbodyTextMMTOL + qry.FieldByName('MERKMALBEZ').AsString + CRLF;
+          vbodyTextMMTOL := vbodyTextMMTOL + qry.FieldByName('MERKMALBEZ').AsString + ' _____ Istwert: ' + qry.FieldByName('X1').AsString;
+          vbodyTextMMTOL := vbodyTextMMTOL + ' / OT: ' + qry.FieldByName('VALOT').AsString;
+          vbodyTextMMTOL := vbodyTextMMTOL + ' / UT: ' + qry.FieldByName('VALUT').AsString;
+          vbodyTextMMTOL := vbodyTextMMTOL + ' / OEGX: ' + qry.FieldByName('OEGX').AsString;
+          vbodyTextMMTOL := vbodyTextMMTOL + ' / UEGX: ' + qry.FieldByName('UEGX').AsString;
+          vbodyTextMMTOL := vbodyTextMMTOL + ' / Bewertung: ' + qry.FieldByName('X30').AsString;
+          vbodyTextMMTOL := vbodyTextMMTOL + CRLF;
+        end
+        else if (qry.FieldByName('X30').AsInteger = -2) then // V2.40 EGG   ///// NEU:   + NICHT -4
+        begin
+          KennungEGGVerletzer := 1;
+          // vbodyTextMMTOL := vbodyTextMMEGG + qry.FieldByName('MERKMALBEZ').AsString + CRLF;
+          vbodyTextMMEGG := vbodyTextMMEGG + qry.FieldByName('MERKMALBEZ').AsString + ' _____ Istwert: ' + qry.FieldByName('X1').AsString;
+          vbodyTextMMEGG := vbodyTextMMEGG + ' / OT: ' + qry.FieldByName('VALOT').AsString;
+          vbodyTextMMEGG := vbodyTextMMEGG + ' / UT: ' + qry.FieldByName('VALUT').AsString;
+          vbodyTextMMEGG := vbodyTextMMEGG + ' / OEGX: ' + qry.FieldByName('OEGX').AsString;
+          vbodyTextMMEGG := vbodyTextMMEGG + ' / UEGX: ' + qry.FieldByName('UEGX').AsString;
+          vbodyTextMMEGG := vbodyTextMMEGG + ' / Bewertung: ' + qry.FieldByName('X30').AsString;
+          vbodyTextMMEGG := vbodyTextMMEGG + CRLF;
+        end;
+
+        qry.next;                                                         
+      end;  // while not qry.EOF 
+      // V2.44
+      sKst := qry.FieldByName('VFELD01').AsString;   // V2.40      
+      if instr (1, sKST, '1864') > 0 then            // V2.40
+        sVerteiler := cQDAVerteilerNameTE1864;       // V2.41
+      else if instr (1, sKST, '1984') > 0 then
+        sVerteiler := cQDAVerteilerNameTE1984;
+      else if instr (1, sKST, '1994') > 0 then
+        sVerteiler := cQDAVerteilerNameTE1994; 
+      else if instr (1, sKST, '6314') > 0 then
+        sVerteiler := cQDAVerteilerNameTE6314;
+      else  // wenn keine der oben genannten Kostelle betroffen ist  // V2.41
+      begin
+        sVerteileroKST := 1;        
+        sVerteiler := cQDAVerteilerNameTEoKST;
+        vbodyText1 := 'Keine der folgenden Kostenstellen ist enthalten: 1864 / 1984 / 1994 / 6314' + CRLF; 
+        vbodyText1 := vbodyText1 + 'In der Kostenstelle ' + qry.FieldByName('VFELD01').AsString + ' wurde bei folgenden Merkmalen die Eingriffsgrenze überschritten';
+      end;
+      // sVerteiler := 'DS__EGG_Verletzer';   // TEST V2.44
+      // V2.44
+      if KennungTOLVerletzer = 1 then
+      begin 
+        sBetreff:='HINWEIS AUF DIE VERLETZUNG VON TOLERANZGRENZEN IN KOSTENSTELLE: ' + qry.FieldByName('VFELD01').AsString;        
+        vbodyText := '';
+        vbodyText := 'Sehr geehrtes Fertigungsteam,' + CRLF + CRLF;
+        vbodyText1 := '';
+        vbodyText2 := '';
+        if sVerteileroKST = 1 then
+          vbodyText1 := 'Keine der folgenden Kostenstellen ist enthalten: 1864 / 1984 / 1994 / 6314' + CRLF;
+        vbodyText1 := vbodyText1+ 'In der Kostenstelle ' + qry.FieldByName('VFELD01').AsString + ' wurde bei folgenden Merkmalen die Toleranzgrenze überschritten';
+        vbodyText2 := 'Bitte UMGEHEND reagieren (ggf. Nachmessung, Werkzeugwechsel, Rückverfolgbarkeit einleiten?)' + CRLF;  //V2.41
+        
+        vbodyText := vbodyText + vbodyText1 + CRLF;  // V2.40
+        vbodyText := vbodyText + vbodyText2 + CRLF;  // V2.40          
+        
+        vbodyText := vbodyText + 'Prüfplan      :  ' + qry.FieldByName('PRUEFPLAN').AsString + CRLF;
+        vbodyText := vbodyText + 'Vorgang       :  ' + qry.FieldByName('VORGANGBEZ').AsString + CRLF;
+        vbodyText := vbodyText + 'Datum/Uhrzeit :  ' + qry.FieldByName('DATUM').AsString + CRLF + CRLF;
+        vbodyText := vbodyText + 'Kostenstelle  :  ' + qry.FieldByName('VFELD01').AsString + CRLF + CRLF;      // V2.38
+        vbodyText := vbodyText + 'Merkmal(e)    :  ' + CRLF;
+        vbodyText := vbodyText + vbodyTextMMTOL + CRLF;
+        vbodyText := vbodyText + CRLF + CRLF + 'Diese Mail wurde automatisch erstellt - bei Fragen wenden Sie sich bitte an den entsprechenden Ansprechpartner.'; 
+      
+        SendeMail(sBetreff, sVerteiler, vbodyText)
+        // if SendeMail(sBetreff, sVerteiler, vbodyText) = True then     // V2.40
+          // UpdateAC(aSampleNo);
+      end    
+      if KennungEGGVerletzer = 1 then
+      begin
+        sBetreff:='HINWEIS AUF DIE VERLETZUNG VON EINGRIFFSGRENZEN IN KOSTENSTELLE: ' + qry.FieldByName('VFELD01').AsString;        
+        vbodyText := '';
+        vbodyText := 'Sehr geehrtes Fertigungsteam,' + CRLF + CRLF;
+        vbodyText1 := '';
+        vbodyText2 := '';
+        if sVerteileroKST = 1 then
+          vbodyText1 := 'Keine der folgenden Kostenstellen ist enthalten: 1864 / 1984 / 1994 / 6314' + CRLF;
+        vbodyText1 := vbodyText1 + 'In der Kostenstelle ' + qry.FieldByName('VFELD01').AsString + ' wurde bei folgenden Merkmalen die Eingriffsgrenze überschritten';
+        vbodyText2 := 'Bitte Fertigungsprozess prüfen (ggf. Werkzeugwechsel?)' + CRLF;  // V2.41 
+        
+        vbodyText := vbodyText + vbodyText1 + CRLF;  // V2.40
+        vbodyText := vbodyText + vbodyText2 + CRLF;  // V2.40   
+        
+        vbodyText := vbodyText + 'Prüfplan      :  ' + qry.FieldByName('PRUEFPLAN').AsString + CRLF;
+        vbodyText := vbodyText + 'Vorgang       :  ' + qry.FieldByName('VORGANGBEZ').AsString + CRLF;
+        vbodyText := vbodyText + 'Datum/Uhrzeit :  ' + qry.FieldByName('DATUM').AsString + CRLF + CRLF;
+        vbodyText := vbodyText + 'Kostenstelle  :  ' + qry.FieldByName('VFELD01').AsString + CRLF + CRLF;      // V2.38
+        vbodyText := vbodyText + 'Merkmal(e)    :  ' + CRLF;        
+        vbodyText := vbodyText + vbodyTextMMEGG + CRLF;
+        vbodyText := vbodyText + CRLF + CRLF + 'Diese Mail wurde automatisch erstellt - bei Fragen wenden Sie sich bitte an den entsprechenden Ansprechpartner.'; 
+        
+        SendeMail(sBetreff, sVerteiler, vbodyText)
+        // if SendeMail(sBetreff, sVerteiler, vbodyText) = True then     // V2.40
+          // UpdateAC(aSampleNo);
+      end;    
+    end;
+    qry.Close; 
+  finally
+    qry.free;                                 
+  end;      
+end;                   
+
+//--------------------------------------------------------------------------
+// Functionalities after import a single sample  // V2.37
+procedure OnAfterSaveSample(aSampleNo: Integer);
+begin
+    CreateEMailEGGVerletzer(aSampleNo);
+end;
+
+//=====================================================================================================
+function GetPartFromImportFile(aFilename: String; StartPos: Integer): String;
+var
+  I: Integer;
+  FList: TStringList;
+  KfeldTeilenummerLength: Integer;
+  Zeile: String;
+begin
+  Result := '?';
+  if FileExists(aFilename) then
+  begin
+    FList := TStringList.Create;
+    try
+      FList.LoadFromFile(aFilename);
+
+      for I := FList.Count -1 downto 0 do
+      begin
+        Zeile := FList.Strings[I];
+
+        if Pos(KFELD_TEILENUMMER, Zeile) > 0 then  // K0014
+        begin
+          if Pos(KFELD_TEILENUMMER_0, Zeile) > 0 then              // K0014/0 24635047111234567890
+            KfeldTeilenummerLength := Length(KFELD_TEILENUMMER_0)
+          else if Pos(KFELD_TEILENUMMER_1, Zeile) > 0 then              // K0014/1 24635047111234567890 //V153
+            KfeldTeilenummerLength := Length(KFELD_TEILENUMMER_1)       //V153
+          else                                                     // K0014 24635047111234567890
+            KfeldTeilenummerLength := Length(KFELD_TEILENUMMER);
+
+          Result := Copy(Zeile, KfeldTeilenummerLength + 2, Length(Zeile));
+          Result := Copy(Result, StartPos, TEIL_COPY_LENGTH);
+          Exit;
+        end;
+      end;
+    finally
+      FList.Free;
+    end;
+  end;
+end;
+//=====================================================================================================
+//  Durch diese Routine wird die zu dem übergebenen Teileident passende Messung mit
+//  den übergebenen Stichprobeninformationen geupdatet
+//
+//  @param aID Übergabes des Teileidents
+//  @param aMaschine Übergabe der Stichprobeninformation "Maschine"
+//  @param aSchritt Übergabe der Stichprobeninformation "Schritt"
+//  @param aVorrichtung Übergabe der Stichprobeninformation "Vorrichtung"
+//  01.09.2021, jhavril
+procedure UpdateSample(aID, aMaschine, aSchritt, aVorrichtung: String);
+var
+  QuData: TQuery;
+  columns : TStringList;
+  my_string : String;
+  my_column : String;
+  pom : Integer; 
+begin
+  my_string := aMaschine;
+  my_schritt := aMaschine;
+  columns:= TStringList.Create;
+  columns.CommaText := '1=SUCH20, 2=SUCH21, 3=SUCH22, 4=SUCH3, 5=SUCH4'; 
+  Delete(my_string, 1,8);
+  pom := StrToInt(my_string) div 1000;
+  my_column := columns.Values[pom];
+  Delete(my_schritt, 1,6);
+
+  QuData := TQuery.Create(nil);
+  try
+    QuData.DatabaseName := 'QDA8';
+    //QuData.RequestLive := True;     Mario Kuhl: 19.11.2011 wegen Unverträglichkeit im 9er Umfeld auskommentiert     
+    QuData.Close;
+    QuData.Sql.Clear;
+    
+    QuData.Sql.Add('UPDATE DAT_MESSUNG SET ' + my_column + ' = :SCHRITT,');
+    QuData.Sql.Add('WHERE SUCH' + IntToStr(STPR_IDENT + 2) + ' = :IDENT'); 
+    QuData.ParamByName('IDENT').AsString := aID;                  
+    QuData.ParamByName('SCHRITT').AsString := my_schritt + '-' + aVorrichtung;
+    QuData.ExecSql;
+                                                                   
+   
+  finally
+    QuData.Free;
+  end;
+end;
+
+
+//.ASI DataMyte.-----kuhl-----------------------------------------------------------------
+// Durch diese Routine werden die Stischprobeninformationen anhand des übergebenenen
+// Teileidents ermittelt und zurückgegeben.
+//
+// @param aIdent Übergabe des Teileidents
+// @param aMaschine Rückgabe der Stichprobeninformation "Maschine"
+// @param aSchritt Rückgabe der Stichprobeninformation "Schritt"
+// @param aVorrichtung Rückgabe der Stichprobeninformation "Vorrichtung"
+// @param result TRUE wenn Daten ermittelt werden konnten
+// 06.09.2011
+//--------------------------------------------------------------------------.ASI DataMyte.
+function GetSampleInfosFromZDCPrisma(aIdent: String; var aMaschine, aSchritt, aVorrichtung: String): Boolean;
+var                                    
+  QuData: TQuery;                  
+begin
+  Result := False;
+
+  QuData := TQuery.Create(nil);
+  try
+    QuData.DatabaseName := 'QDA8';
+    QuData.Sql.Clear;
+    QuData.Sql.Add('SELECT IDENT, MASCHINE, SCHRITT, VORRICHTUNG');
+    QuData.Sql.Add('FROM ZDC_PRISMA');
+    QuData.Sql.Add('WHERE IDENT = :IDENT');                                                 
+    QuData.ParamByName('IDENT').AsString := aIdent;  
+    QuData.Open;                    
+
+    if not (QuData.Bof and QuData.Eof) then     
+    begin
+      aMaschine := QuData.FieldByName('MASCHINE').AsString;
+      aSchritt := QuData.FieldByName('SCHRITT').AsString;
+      aVorrichtung := QuData.FieldByName('VORRICHTUNG').AsString;
+      
+      UpdateSample(aIdent, aMaschine, aSchritt, aVorrichtung);
+      
+      Result := True; 
+    end;
+          
+  finally
+    QuData.Free;                                                                                                                             
+  end;
+end; 
+
+//.-------------------------------------------------------------------------------------.
+procedure AfterImport(aFilname, aPath: String; aPrfNr: Integer);
+var
+  Ident: String;
+  Maschine: String;
+  Schritt: String;
+  Vorrichtung: String;
+  THIS_SCRIPT: String;
+  Qu: TQuery;   // V1.0.19
+begin
+  THIS_SCRIPT := 'AfterImport';
+                                                 
+  case D3ImportHeader.InterfaceCfgNo of         
+       // 39, 88, 77, 81, 98, 107: begin           // 20131213_ab: 88 aufgenommen       
+       5009: begin           // 20131213_ab: 88 aufgenommen   V1.0.26 + V1.0.27 erweitert um IF110 (KW)
+           if length(gstrIdentForITG) > 0 then       
+             begin      
+             Ident := gstrIdentForITG;
+             Maschine := '';                                                    
+             Schritt := '';                                            
+             Vorrichtung := '';
+                             
+             GetSamleInfosFromZDCPrisma(Ident, Maschine, Schritt, Vorrichtung);
+             end // of if#39                                 
+           else begin                   
+              NewLogBookEntryEx(LOG_Batch_Fehler, 'Script', THIS_SCRIPT , 'GetSamleInfosFromZDCPrisma', 'Ident fehlt!');
+           end; //--- of if len
+       end;    
+   end; //--- of case                                   
+
+   //--- global Inhalt loeschen
+   gstrIdentForSpindel := '';
+
+end; //--- of afterimport
+
+//.-------------------------------------------------------------------------------------.
+
+//<eof>

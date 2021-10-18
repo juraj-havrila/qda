@@ -105,8 +105,8 @@ Begin
           QuData.ParamByName('FILTER').AsString := 'test1b'; 
          //QuData.ParamByName('MASCHINE').AsString := aMaschine;
           QuData.Open;     
- //       if not (QuData.Bof and QuData.Eof) then   
-
+      if not (QuData.Bof and QuData.Eof) then   
+begin
 QuData.DisableControls;
 
 QuData.First;
@@ -121,6 +121,7 @@ while not QuData.Eof do begin
 
 
 QuData.EnableControls;
+end;
 QuData.Free;
 end; 
 

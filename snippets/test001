@@ -1,0 +1,127 @@
+//procedure TestProcedure; forward;
+//procedure WriteIn; forward;
+
+procedure TestProcedure;
+var 
+my_string : String;
+my_column : String;
+pom : Integer; 
+column  : TStringList;
+begin
+my_string := 'AS4021';
+
+column:= TStringList.Create;
+column.CommaText := '1=SUCH20, 2=SUCH21, 3=SUCH22, 4=SUCH3, 5=SUCH4'; 
+
+//pom := StrToInt(Delete(my_string,1,2));
+Delete(my_string, 1,2);
+
+pom := StrToInt(my_string) div 1000;
+
+my_column := column.Values[pom];
+
+end;
+
+
+
+procedure WriteIn;
+Var
+  QuData: TQuery;   
+  aMaschine: String;       
+  aSchritt: String;
+  aVorrichtung: String;
+  aDatum: String;
+ // bDatum: String;
+  bDatum: TDateTime;
+  
+
+Begin
+//ShortDateFormat := 'mm.dd.yyyy';
+ aMaschine := 'test1a';
+ aSchritt := 'test1b';
+ aVorrichtung := 'test1c';
+ aDatum := '12.08.2021 23:10:02';
+//  aDatum := '12/08/2021 21:30:02';
+// aDatum := '12.08.21';
+//bDatum := FormatDateTime('c', aDatum.AsDateTime);
+aDatum :=  AnsiReplaceStr(aDatum, '.', '/');
+ShortDateFormat := 'dd.mm.yyyy';
+//aDatum := StrToDateTime(aDatum);
+//bDatum :=  FormatDateTime('dd/mm/yy hh:nn:ss', StrToDateTime(aDatum));
+
+
+
+ 
+   QuData := TQuery.Create(nil);
+   
+      QuData.DatabaseName := 'QDA8';
+        QuData.Close;
+        QuData.Sql.Clear;
+        QuData.Sql.Add('INSERT INTO TEST_JURAJ (SUCH3, SUCH4, SUCH5, DATUM) VALUES');
+        QuData.Sql.Add('(:SCHRITT, :MASCHINE, :VORRICHTUNG, :DATUM)');
+        //QuData.ParamByName('IDENT').AsString := aID;
+        QuData.ParamByName('MASCHINE').AsString := aMaschine;
+        QuData.ParamByName('SCHRITT').AsString := aSchritt;
+        QuData.ParamByName('VORRICHTUNG').AsString := aVorrichtung;
+        quData.ParamByName('DATUM').AsDateTime := StrToDateTime(aDatum); 
+       // quData.ParamByName('DATUM').AsDateTime := aDatum; 
+        QuData.ExecSql;    
+  
+  //    finally
+    QuData.Free;
+End;
+
+
+
+/////////////////////////////////////////
+
+
+
+procedure ReadOut;
+Var
+  QuData: TQuery;   
+  my_Maschine: String;       
+  my_Schritt: String;
+  my_Vorrichtung: String;
+  my_Datum: String;
+  IDList : TStringList;
+  MaschineList : TStringList;
+  SchrittList : TStringList;
+  VorrichtungList : TStringList;
+  DatumList : TStringList;  
+ // bDatum: String;
+  bDatum: TDateTime;
+
+Begin
+
+        QuData := TQuery.Create(nil);
+   //     try
+          QuData.DatabaseName := 'QDA8';
+          QuData.Close;
+          QuData.Sql.Clear;
+          QuData.Sql.Add('SELECT RECORD_ID, SUCH3, SUCH4, SUCH5, DATUM FROM TEST_JURAJ');
+          QuData.Sql.Add('WHERE SUCH3 = :FILTER');
+         //QuData.Sql.Add('AND MASCHINE = :MASCHINE');
+          QuData.ParamByName('FILTER').AsString := 'test1b'; 
+         //QuData.ParamByName('MASCHINE').AsString := aMaschine;
+          QuData.Open;     
+ //       if not (QuData.Bof and QuData.Eof) then   
+
+QuData.DisableControls;
+
+QuData.First;
+while not QuData.Eof do begin
+                
+               IDList := QuData.FieldByName('RECORD_ID').AsString;  
+               MaschineList := QuData.FieldByName('SUCH3').AsString; 
+               VorrichtungList := QuData.FieldByName('SUCH4').AsString; 
+               DatumList := QuData.FieldByName('DATUM').AsString; 
+               QuData.Next;
+               end;
+
+
+QuData.EnableControls;
+QuData.Free;
+end; 
+
+

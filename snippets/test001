@@ -111,6 +111,7 @@ QuData.DisableControls;
 
 QuData.First;
 while not QuData.Eof do begin
+                ///actually wrong -- works, but with String not StringList, DO NOT Reuse like that, look in PrismaImport...
                 
                IDList := QuData.FieldByName('RECORD_ID').AsString;  
                MaschineList := QuData.FieldByName('SUCH3').AsString; 

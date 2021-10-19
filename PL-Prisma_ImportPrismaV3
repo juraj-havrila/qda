@@ -40,7 +40,7 @@ const
 
 var
   FileToMove: Boolean;
- 
+  RelatedFileContent: Boolean;
 { forward Deklarationen }
 function GetValueFromNode(aNodeName, aLine: String): String; forward;
 function ImportPrismaFile(aFilename: String): Boolean; forward;
@@ -67,6 +67,7 @@ var
   Anz_Dateien: Integer;   // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
   FileList: TStringList;
   ImportOK: Boolean;
+  
 begin
   FileList := TStringList.Create;
   try
@@ -121,6 +122,7 @@ begin
 //  ID_Anbauteil := TStringList.Create;    //jhavril, 11.10.2021 : prüfen ob dies die richtige Stelle ist zum initiieren
   try
     ImportFile.LoadFromFile(aFilename);
+    RelatedFileContent := False;
     for I := 0 to ImportFile.Count - 1 do
     begin
       Zeile := ImportFile.Strings[I];
@@ -159,6 +161,7 @@ begin
     Result := True;
   finally
     ImportFile.Free;
+    if not RelatedFileContent then FileToMove := True;
   end;
 end;
 
@@ -311,6 +314,7 @@ begin
 ////--------       
         if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 then     ///nicht sicher ob das notwendig ist
         begin
+          RelatedFileContent := True;
           QuData := TQuery.Create(nil);
         try
           QuData.DatabaseName := 'QDA8';
@@ -347,6 +351,7 @@ begin
 ////--------    
         else if Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_1) > 0 then
         begin
+        RelatedFileContent := True;
         for L := 0 to aID_Anbauteil.Count-1 do
         begin
           my_Anbauteil := aID_Anbauteil[L];
@@ -391,6 +396,7 @@ begin
 ////--------
         else if Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_FINAL) > 0 then
         begin
+          RelatedFileContent := True;
           my_Anbauteil := aID_Anbauteil[0];
           QuData := TQuery.Create(nil);
           try

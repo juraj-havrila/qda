@@ -161,7 +161,7 @@ begin
     Result := True;
   finally
     ImportFile.Free;
-    if not RelatedFileContent then FileToMove := True;
+    if (not RelatedFileContent) then FileToMove := True;
   end;
 end;
 
@@ -390,7 +390,13 @@ begin
        
        if (my_AnzahlAnbauteile = 4) then 
          FileToMove := True;
-       else FileToMove := False;
+         else
+            begin  
+//              FileToMove := False;
+//              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True; 
+              ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil);
+              FileToMove := True; 
+            end;   
        end;
     end;
 ////--------

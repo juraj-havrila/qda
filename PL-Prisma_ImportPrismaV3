@@ -19,13 +19,13 @@
 const
   { Stichprobenfelder }                                                         
   //MAX_ANZ_FILES = 1000;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien 
-  MAX_ANZ_FILES = 50;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
+  MAX_ANZ_FILES = 500;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
   STPR_IDENT = 1;                         
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
   STPR_VORRICHTUNG = 3;              //20130418_ab/js analog zum Systemscript 7 (von 4 auf 3 gesetzt)
-  IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
-//  IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG';                                    
+//  IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
+  IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG';                                    
   { Filter auf zu Verarbeitende OPs }              // aboeg: es werden von PLA alle Telegramme von Prisma übertragen     
   //OP_LIST = ';OP 70A;OP 70B;OP70A;OP70B;OP_DUMMY'; // aboeg, 29.12.2011: OP war falsch: 060 => 070  jbismar hinzugefügt (OP70A,OP70B)
                                                    // aboeg, 27.01.2017: hinter letzten OP muss ein ";" kommen s.u.   !!!!!!!!!!!!!!!!!!
@@ -349,7 +349,7 @@ begin
         end;  
         end;
 ////--------    
-        else if Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_1) > 0 then
+        else if (Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_1) > 0) and (not aID_Anbauteil.Count = 0) then
         begin
         RelatedFileContent := True;
         for L := 0 to aID_Anbauteil.Count-1 do
@@ -394,9 +394,11 @@ begin
        end;
     end;
 ////--------
-        else if Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_FINAL) > 0 then
+        else if (Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_FINAL) > 0) and (not aID_Anbauteil.Count = 0)
+        then
         begin
-          RelatedFileContent := True;
+          RelatedFileContent := True;         
+//          if (not aID_Anbauteil[0] = '') then my_Anbauteil := aID_Anbauteil[0];
           my_Anbauteil := aID_Anbauteil[0];
           QuData := TQuery.Create(nil);
           try

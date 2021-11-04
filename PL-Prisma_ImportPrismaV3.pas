@@ -460,7 +460,7 @@ begin
             end;     
           else
             begin  
-              FileToMove := False;
+              //FileToMove := False;
               if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;         
             end;           
         finally

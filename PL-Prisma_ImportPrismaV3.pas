@@ -51,6 +51,7 @@ function ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_An
 procedure StartImport; forward;            
 function UpdateSample(aID, aMaschine, aSchritt, aVorrichtung: String): Boolean; forward;
 procedure UpdateZDCTable(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil: TStringList); forward;
+procedure UpdateOrphanedSample; forward;
 //function UpdateZDCTable(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil: TStringList): Boolean; forward;
 
                                                                                                  
@@ -468,4 +469,81 @@ begin
        end;
      end;
 ////--------
+end;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+procedure UpdateOrphanedSample;
+var
+  QuData:              TQuery;   
+  my_Ident:            String;
+  my_Maschine:         String;  
+  my_Schritt:          String;
+  my_Vorrichtung:      String; 
+  list_Ident:          TStringList;  
+  list_Maschine:       TStringList;  
+  list_Schritt:        TStringList;
+  list_Vorrichtung:    TStringList;
+  is_finished:         String;
+  L:                   Integer;
+begin
+  QuData := TQuery.Create(nil);
+  try
+    QuData.DatabaseName := 'QDA8';
+    QuData.Close;
+    QuData.Sql.Clear;
+    QuData.Sql.Add('SELECT IDENT, MASCHINE, SCHRITT, VORRICHTUNG FROM ZDC_PRISMA');
+    QuData.Sql.Add('WHERE IS_FINISHED = 1');
+    QuData.Open;     
+  if not (QuData.Bof and QuData.Eof) then   
+    begin 
+      list_Ident := TStringList.Create;
+      list_Maschine := TStringList.Create;
+      list_Schritt := TStringList.Create;
+      list_Vorrichtung := TStringList.Create;
+      QuData.DisableControls;
+      QuData.First;
+      while not QuData.Eof do begin     
+        list_Ident.Add(QuData.FieldByName('IDENT').AsString);  
+        list_Maschine.Add(QuData.FieldByName('MASCHINE').AsString);  
+        list_Schritt.Add(QuData.FieldByName('SCHRITT').AsString);
+        list_Vorrichtung.Add(QuData.FieldByName('VORRICHTUNG').AsString);
+        QuData.Next;
+        end;
+        QuData.EnableControls;
+      for L := 0 to list_Ident.Count-1 do begin
+        my_Ident :=  list_Ident[L];
+        my_Maschine :=  list_Maschine[L];  
+        my_Schritt :=   list_Schritt[L];
+        my_Vorrichtung := list_Vorrichtung[L]; 
+        if UpdateSample(my_Ident, my_Maschine, my_Schritt, my_Vorrichtung)
+          then is_finished :=2;
+          else is_finished :=1;  
+          
+        QuData.DatabaseName := 'QDA8';
+        QuData.Close;
+        QuData.Sql.Clear;        
+        QuData.Sql.Add('UPDATE ZDC_PRISMA SET IS_FINISHED = :IS_FINISHED');
+        QuData.Sql.Add('WHERE IDENT = :IDENT AND MASCHINE = :MASCHINE');
+        QuData.ParamByName('IDENT').AsString := my_Ident;
+        QuData.ParamByName('MASCHINE').AsString := my_Maschine;
+        QuData.ParamByName('IS_FINISHED').AsString := is_finished; 
+        QuData.ExecSql;
+      end;
+      list_Ident.Free;
+      list_Maschine.Free;
+      list_Schritt.Free;
+      list_Vorrichtung.Free;
+    end;    
+  finally
+    QuData.DatabaseName := 'QDA8';
+    QuData.Close;
+    QuData.Sql.Clear;
+    QuData.Sql.Add('DELETE FROM ZDC_PRISMA');
+    QuData.Sql.Add('WHERE  DATUM < trunc(sysdate) - 100');
+    QuData.ExecSql; 
+    QuData.Free;
+  end;
+ 
 end;

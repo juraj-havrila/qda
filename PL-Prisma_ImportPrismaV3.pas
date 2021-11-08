@@ -393,7 +393,7 @@ begin
           QuData.Free;
        end;
        
-       if (my_AnzahlAnbauteile = 4) then 
+       if (my_AnzahlAnbauteile >= 4) then 
          FileToMove := True;
          else
             begin  
@@ -439,7 +439,11 @@ begin
                 my_Schritt :=   list_Schritt[L];
                 my_Vorrichtung := list_Vorrichtung[L]; 
                 if UpdateSample(aID, my_Maschine, my_Schritt, my_Vorrichtung)
-                  then is_finished :=2;
+                  then
+                       begin
+                       is_finished :=2;
+                       FileToMove := True;
+                       end;
                   else is_finished :=1;
      
                 QuData.DatabaseName := 'QDA8';

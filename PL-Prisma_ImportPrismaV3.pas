@@ -206,6 +206,7 @@ begin
   if not FileExists(my_filename) then 
     begin      
       ExportFile.SaveToFile(my_filename);
+      //CloseFile(my_filename);
       Result := True;
     end
     else Result := False;

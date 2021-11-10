@@ -1,4 +1,4 @@
-﻿## Script to generate QDA Alias.ini File from provided JSON   [ Option /i ]
+## Script to generate QDA Alias.ini File from provided JSON   [ Option /i ]
 ## OR to generate JSON File from existing Alias.ini           [ Option /e ]
 ## Juraj Havrila, 2021-11-10
 
@@ -16,8 +16,49 @@ $my_outfile = 'juraj.ini'
 Write-Host "Im in the IMPORT section"
     $my_infile=$PSScriptRoot+"\"+$fileImport
     if (!(Test-Path $fileImport)) { $fileImport = $my_infile}
-    $qda_parameters_should = Get-Content $fileImport | ConvertFrom-Json
+    if ($fileImport -match '.json$') {$qda_parameters_should = Get-Content $fileImport | ConvertFrom-Json}
 
+################
+
+if ($fileImport -match '.csv$') {
+    $my_infile=$PSScriptRoot+"\"+$fileImport
+    $qda_parameters_raw = Get-Content $my_infile 
+    $qda_parameters_should=@{}
+    $header=@()
+    
+    
+
+foreach ($my_line in $qda_parameters_raw){
+   $my_qda_session=@{}
+   $my_input=@()
+   if ($qda_parameters_raw.IndexOf($my_line) -eq 0){ $header= $my_line.Split(",") }
+   
+   else {
+   
+   $my_input=$my_line.Split(",")
+  # Write-Host $header.Count
+ #  Write-Host $my_input.Count
+   for ($i=0; $i -lt $my_input.Count; $i++){
+  #   $my_qda_session.$header[$i]=$my_input[$i]
+# Write-Host $my_input[$i]
+   #if ($my_input[$i]) {$my_qda_session.Add($header[$i],$my_input[$i])}
+   $my_qda_session.Add($header[$i],$my_input[$i])
+
+
+   }
+   }
+  
+   #$qda_parameters_should+=$my_qda_session
+
+   $qda_parameters_should[$qda_parameters_raw.IndexOf($my_line)-1]=$my_qda_session
+   #$qda_parameters_should.Add($my_qda_session)
+   }
+
+Write-Host $qda_parameters_should.count
+Write-Host $qda_parameters_should
+
+}
+################
     $my_timestamp = Get-Date -Format g
     Add-Content $scriptlog "$my_timestamp INFO: Importing Alias.ini Configuration from file $my_infile"
 #    }
@@ -74,8 +115,6 @@ if ($my_line.Contains('#'))  { $my_line = $my_line.Substring(0, $my_line.IndexOf
 
 
 
-
-
   if ($my_line -match '\[(.*?)\]' ) {
       if ($count_sessions) {
         $QDA_ConfigData +=  @{SessionName = $my_SessionName; Driver = $my_driver; Alias=$my_alias; Name=$my_name; Password=$my_password; Param0=$my_param0; Param1=$my_param1; Encryption=$my_encryption; IsWebApp= $my_iswebapp; IsLizenz= $my_islizenz; IsStandard=$my_isstandard; IsMasterConfigDB=$my_ismasterconfigdb};
@@ -116,9 +155,9 @@ if ($my_line.Contains('#'))  { $my_line = $my_line.Substring(0, $my_line.IndexOf
 
     $my_outfile=$PSScriptRoot+"\"+$fileExport
 
-    if ($fileExport -match '.json$' ) { $QDA_ConfigData | ConvertTo-Json -depth 100 | Out-File $my_outfile }
+    if ($fileExport -match '.json$') { $QDA_ConfigData | ConvertTo-Json -depth 100 | Out-File $my_outfile }
 
-    elseif ($fileExport -match '.csv$' ) {
+    elseif ($fileExport -match '.csv$') {
     $output_to_file = @()
     $output_to_file = "SessionName,Driver,Alias,Name,Password,Param0,Param1,Encryption,IsWebApp,IsLizenz,IsStandard,IsMasterConfigDB`n"
     foreach ($my_qda_session in $QDA_ConfigData){

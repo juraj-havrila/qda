@@ -10,10 +10,18 @@ for ( $i = 0; $i -lt $args.count; $i++ ) {
 }
 $scriptName = [io.path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
 $scriptLog = $PSScriptRoot+"\"+$scriptName+".log"
+$alias_ini_filename='Alias.ini.txt'
 
 if ($fileImport){
 $my_outfile = 'juraj.ini'
+#$my_outfile = $alias_ini_filename
 Write-Host "I'm in the IMPORT section"
+$my_timestamp = Get-Date -Format yyyy-MM-dd_HH-mm
+$backup_ini_filename = $PSScriptRoot+"\"+ $alias_ini_filename+"."+$my_timestamp+".bkp"
+Copy-Item $alias_ini_filename -Destination $backup_ini_filename
+  $my_timestamp = Get-Date -Format g
+  Add-Content $scriptlog "$my_timestamp INFO: Backup of the file done: $alias_ini_filename --> $backup_ini_filename"
+
     $my_infile=$PSScriptRoot+"\"+$fileImport
     if (!(Test-Path $fileImport)) { $fileImport = $my_infile}
 
@@ -49,12 +57,9 @@ Write-Host "I'm in the IMPORT section"
         }
    }
   }
-
-  $my_timestamp = Get-Date -Format g
-  Add-Content $scriptlog "$my_timestamp INFO: Importing Alias.ini Configuration from file $my_infile"
-
 #### HERE CODE to Convert json Input to Alias.ini
   $output_to_file = @() 
+  $count_sessions = 0;
   foreach ($my_qda_session in $qda_parameters_should) {
     if ($my_qda_session.SessionName){ $output_to_file += '[' + $my_qda_session.SessionName + ']' }
     if ($my_qda_session.Driver){ $output_to_file += 'Driver=' + $my_qda_session.Driver }
@@ -69,15 +74,20 @@ Write-Host "I'm in the IMPORT section"
     if ($my_qda_session.IsStandard){ $output_to_file += 'IsStandard=' + $my_qda_session.IsStandard }
     if ($my_qda_session.IsMasterConfigDB){ $output_to_file += 'IsMasterConfigDB=' + $my_qda_session.IsMasterConfigDB }
     if ($my_qda_session.SessionName){ $output_to_file += '' } # this obscure if-condition is due to emty line at the beggining of file while importing from .csv ...
+    $count_sessions++
   }
   $output_to_file| Out-File $my_outfile
+  $my_timestamp = Get-Date -Format g
+  Add-Content $scriptlog "$my_timestamp INFO: Imported $count_sessions QDA Session configurations from file $my_infile  --> $my_outfile"
 }
 
 if ($fileExport){
   $QDA_ConfigData = @()
   $count_sessions = 0;
   Write-Host "Im in the EXPORT section"
-  $fileImport='Alias.ini.txt'
+#  $fileImport='Alias.ini.txt'
+  $fileImport='juraj.ini'
+#  $fileImport=$alias_ini_filename
   $my_infile=$PSScriptRoot+"\"+$fileImport
   $qda_parameters_raw = Get-Content $my_infile 
  
@@ -127,5 +137,5 @@ if ($fileExport){
       $output_to_file| Out-File $my_outfile
       }
   $my_timestamp = Get-Date -Format g
-  Add-Content $scriptlog "$my_timestamp INFO: Exporting QDA Configuration of $count_sessions sessions from $my_infile into file $my_outfile"
+  Add-Content $scriptlog "$my_timestamp INFO: Exporting QDA Configuration of $count_sessions sessions from $my_infile --> $my_outfile"
   }

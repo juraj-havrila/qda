@@ -56,7 +56,6 @@ Write-Host "I'm in the IMPORT section"
 #### HERE CODE to Convert json Input to Alias.ini
   $output_to_file = @()
   foreach ($my_qda_session in $qda_parameters_should) {
-    write-host "kokot" $my_qda_session.SessionName
     $output_to_file += '[' + $my_qda_session.SessionName + ']'
     if ($my_qda_session.Driver){ $output_to_file += 'Driver=' + $my_qda_session.Driver }
     if ($my_qda_session.Alias){ $output_to_file += 'Alias=' + $my_qda_session.Alias }

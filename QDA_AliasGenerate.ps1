@@ -23,7 +23,7 @@ Write-Host "Im in the IMPORT section"
 if ($fileImport -match '.csv$') {
     $my_infile=$PSScriptRoot+"\"+$fileImport
     $qda_parameters_raw = Get-Content $my_infile 
-    $qda_parameters_should=@{}
+    $qda_parameters_should=@()
     $header=@()
     
     
@@ -47,15 +47,36 @@ foreach ($my_line in $qda_parameters_raw){
 
    }
    }
-  
+#  write-host $my_qda_session.SessionName
    #$qda_parameters_should+=$my_qda_session
-
-   $qda_parameters_should[$qda_parameters_raw.IndexOf($my_line)-1]=$my_qda_session
+   $qda_parameters_should += [pscustomobject] @{
+   
+   
+SessionName = $my_qda_session.SessionName
+Driver= $my_qda_session.Driver 
+Alias= $my_qda_session.Alias 
+Name= $my_qda_session.Name 
+Password= $my_qda_session.Password 
+Param0= $my_qda_session.Param0 
+Param1= $my_qda_session.Param1 
+Encryption= $my_qda_session.Encryption 
+IsWebApp= $my_qda_session.IsWebApp 
+IsLizenz= $my_qda_session.IsLizenz 
+IsStandard= $my_qda_session.IsStandard 
+IsMasterConfigDB= $my_qda_session.IsMasterConfigDB 
+}
+   
+   
+   
+   #$qda_parameters_should[$qda_parameters_raw.IndexOf($my_line)-1]=$my_qda_session
    #$qda_parameters_should.Add($my_qda_session)
    }
 
-Write-Host $qda_parameters_should.count
-Write-Host $qda_parameters_should
+#Write-Host $qda_parameters_should.count
+Write-Host $qda_parameters_should[51].SessionName
+foreach ($my_test in $qda_parameters_should) {
+Write-Host $my_test.Name
+}
 
 }
 ################
@@ -78,6 +99,7 @@ Write-Host $qda_parameters_should
 #### HERE CODE to Convert json Input to Alias.ini
 $output_to_file = @()
 foreach ($my_qda_session in $qda_parameters_should) {
+write-host "kokot" $my_qda_session.SessionName
 $output_to_file += '[' + $my_qda_session.SessionName + ']'
 if ($my_qda_session.Driver){ $output_to_file += 'Driver=' + $my_qda_session.Driver }
 if ($my_qda_session.Alias){ $output_to_file += 'Alias=' + $my_qda_session.Alias }

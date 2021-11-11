@@ -54,9 +54,9 @@ Write-Host "I'm in the IMPORT section"
   Add-Content $scriptlog "$my_timestamp INFO: Importing Alias.ini Configuration from file $my_infile"
 
 #### HERE CODE to Convert json Input to Alias.ini
-  $output_to_file = @()
+  $output_to_file = @() 
   foreach ($my_qda_session in $qda_parameters_should) {
-    $output_to_file += '[' + $my_qda_session.SessionName + ']'
+    if ($my_qda_session.SessionName){ $output_to_file += '[' + $my_qda_session.SessionName + ']' }
     if ($my_qda_session.Driver){ $output_to_file += 'Driver=' + $my_qda_session.Driver }
     if ($my_qda_session.Alias){ $output_to_file += 'Alias=' + $my_qda_session.Alias }
     if ($my_qda_session.Name){ $output_to_file += 'Name=' + $my_qda_session.Name }
@@ -68,7 +68,7 @@ Write-Host "I'm in the IMPORT section"
     if ($my_qda_session.IsLizenz){ $output_to_file += 'IsLizenz=' + $my_qda_session.IsLizenz }
     if ($my_qda_session.IsStandard){ $output_to_file += 'IsStandard=' + $my_qda_session.IsStandard }
     if ($my_qda_session.IsMasterConfigDB){ $output_to_file += 'IsMasterConfigDB=' + $my_qda_session.IsMasterConfigDB }
-    $output_to_file += ''
+    if ($my_qda_session.SessionName){ $output_to_file += '' } # this obscure if-condition is due to emty line at the beggining of file while importing from .csv ...
   }
   $output_to_file| Out-File $my_outfile
 }

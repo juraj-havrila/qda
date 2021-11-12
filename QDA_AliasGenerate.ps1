@@ -94,10 +94,11 @@ if ($fileExport){
   foreach ($my_line in $qda_parameters_raw){
     if ($my_line.Contains('#'))  { $my_line = $my_line.Substring(0, $my_line.IndexOf('#')) }
     if ($my_line -match '\[(.*?)\]' ) {
+      #$count_sessions++
       if ($count_sessions) {
-      $QDA_ConfigData +=  @{SessionName = $my_SessionName; Driver = $my_driver; Alias=$my_alias; Name=$my_name; Password=$my_password; Param0=$my_param0; Param1=$my_param1; Encryption=$my_encryption; IsWebApp= $my_iswebapp; IsLizenz= $my_islizenz; IsStandard=$my_isstandard; IsMasterConfigDB=$my_ismasterconfigdb};
+      $QDA_ConfigData +=  @{SessionName = $my_SessionName; Driver = $my_driver; Alias=$my_alias; Name=$my_name; Password=$my_password; Param0=$my_param0; Param1=$my_param1; Encryption=$my_encryption; IsWebApp= $my_iswebapp; IsLizenz= $my_islizenz; IsStandard=$my_isstandard; IsMasterConfigDB=$my_ismasterconfigdb}
       }
-        $my_SessionName = ''
+        $my_SessionName = $my_line.Trim('[]')
         $my_driver=''
         $my_alias=''
         $my_name=''
@@ -109,7 +110,6 @@ if ($fileExport){
         $my_islizenz=''
         $my_isstandard=''
         $my_ismasterconfigdb=''
-        $my_SessionName = $my_line.Trim('[]')
         $count_sessions++
     }
    elseif ($my_line -match '^Driver=' ) { $my_driver= $my_line.Trim('^Driver=') }
@@ -125,6 +125,7 @@ if ($fileExport){
    elseif ($my_line -match '^IsMasterConfigDB=' ) { $my_ismasterconfigdb= $my_line.Trim('^IsMasterConfigDB=') }
    #else {Write-Host $my_line}
    }
+   $QDA_ConfigData +=  @{SessionName = $my_SessionName; Driver = $my_driver; Alias=$my_alias; Name=$my_name; Password=$my_password; Param0=$my_param0; Param1=$my_param1; Encryption=$my_encryption; IsWebApp= $my_iswebapp; IsLizenz= $my_islizenz; IsStandard=$my_isstandard; IsMasterConfigDB=$my_ismasterconfigdb}
     $my_outfile=$PSScriptRoot+"\"+$fileExport
   if ($fileExport -match '.json$') { $QDA_ConfigData | ConvertTo-Json -depth 100 | Out-File $my_outfile }
 

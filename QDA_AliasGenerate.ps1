@@ -10,7 +10,7 @@ for ( $i = 0; $i -lt $args.count; $i++ ) {
 }
 $scriptName = [io.path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
 $scriptLog = $PSScriptRoot+"\"+$scriptName+".log"
-$alias_ini_filename='Alias.ini.txt'
+$alias_ini_filename='Alias.ini_extended.txt'
 
 if ($fileImport){
 $my_outfile = 'juraj.ini'
@@ -84,10 +84,10 @@ Copy-Item $alias_ini_filename -Destination $backup_ini_filename
 if ($fileExport){
   $QDA_ConfigData = @()
   $count_sessions = 0;
-  Write-Host "Im in the EXPORT section"
+  Write-Host "I'm in the EXPORT section"
 #  $fileImport='Alias.ini.txt'
-  $fileImport='juraj.ini'
-#  $fileImport=$alias_ini_filename
+#  $fileImport='juraj.ini'
+  $fileImport=$alias_ini_filename
   $my_infile=$PSScriptRoot+"\"+$fileImport
   $qda_parameters_raw = Get-Content $my_infile 
  
@@ -98,7 +98,7 @@ if ($fileExport){
       if ($count_sessions) {
       $QDA_ConfigData +=  @{SessionName = $my_SessionName; Driver = $my_driver; Alias=$my_alias; Name=$my_name; Password=$my_password; Param0=$my_param0; Param1=$my_param1; Encryption=$my_encryption; IsWebApp= $my_iswebapp; IsLizenz= $my_islizenz; IsStandard=$my_isstandard; IsMasterConfigDB=$my_ismasterconfigdb}
       }
-        $my_SessionName = $my_line.Trim('[]')
+        $my_SessionName = $my_line.Trim().Trim('[]')
         $my_driver=''
         $my_alias=''
         $my_name=''

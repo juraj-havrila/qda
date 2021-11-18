@@ -113,11 +113,11 @@ if ($fileExport){
         $count_sessions++
     }
    elseif ($my_line -match '^Driver=' ) { $my_driver= $my_line.Trim('^Driver=') }
-   elseif ($my_line -match '^Alias=' ) { $my_alias= $my_line.Trim('^Alias=') }
-   elseif ($my_line -match '^Name=' ) { $my_name= $my_line.Trim('^Name=') }
-   elseif ($my_line -match '^Password=' ) { $my_password= $my_line.Trim('^Password=') }
-   elseif ($my_line -match '^Param0=' ) { $my_param0= $my_line.Trim('^Param0=') }
-   elseif ($my_line -match '^Param1=' ) { $my_param1= $my_line.Trim('^Param1=') }
+   elseif ($my_line -match '^Alias=' ) { $my_alias= $my_line.Replace('Alias=','') }
+   elseif ($my_line -match '^Name=' ) { $my_name= $my_line.Replace('Name=','') }
+   elseif ($my_line -match '^Password=' ) { $my_password= $my_line.Replace('Password=','') }
+   elseif ($my_line -match '^Param0=' ) { $my_param0= $my_line.Replace('Param0=','') }
+   elseif ($my_line -match '^Param1=' ) { $my_param1= $my_line.Replace('Param1=','') }
    elseif ($my_line -match '^Encryption=' ) { $my_encryption= $my_line.Trim('^Encryption=') }
    elseif ($my_line -match '^IsWebApp=' ) { $my_iswebapp= $my_line.Trim('^IsWebApp=') }
    elseif ($my_line -match '^IsLizenz=' ) { $my_islizenz= $my_line.Trim('^IsLizenz=') }

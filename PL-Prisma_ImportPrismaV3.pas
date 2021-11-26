@@ -306,6 +306,7 @@ var
   my_Maschine:         String;  
   my_Schritt:          String;
   my_Vorrichtung:      String; 
+//  my_Filter:           String; 
   list_Maschine:       TStringList;  
   list_Schritt:        TStringList;
   list_Vorrichtung:    TStringList;
@@ -317,7 +318,8 @@ begin
    ShortDateFormat := 'dd.mm.yyyy';                //jhavril, 25.8.2021: Datum Format fixed (mm.dd -> dd.mm)
    my_AnzahlAnbauteile := 0;
 ////--------       
-        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 then     ///nicht sicher ob das notwendig ist
+//        my_Filter := Pos('Schweißen ITG', aSchritt); 
+        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos('Schweißen ITG', aSchritt) then     ///nicht sicher ob das notwendig ist
         begin
           RelatedFileContent := True;
           QuData := TQuery.Create(nil);
@@ -397,7 +399,7 @@ begin
          FileToMove := True;
          else
             begin  
-//              FileToMove := False;
+              FileToMove := False;
 //              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True; 
               if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;
 //              FileToMove := True; 
@@ -434,6 +436,7 @@ begin
                 QuData.Next;
                 end;
                 QuData.EnableControls;
+                if (list_Maschine.Count >= 3) then FileToMove := True; 
               for L := 0 to list_Maschine.Count-1 do begin
                 my_Maschine :=  list_Maschine[L];  
                 my_Schritt :=   list_Schritt[L];
@@ -442,7 +445,6 @@ begin
                   then
                        is_finished :=2;
                   else is_finished :=1;
-     
                 QuData.DatabaseName := 'QDA8';
                 QuData.Close;
                 QuData.Sql.Clear;        
@@ -457,8 +459,7 @@ begin
               end;
               list_Maschine.Free;
               list_Schritt.Free;
-              list_Vorrichtung.Free;
-              FileToMove := True;  
+              list_Vorrichtung.Free; 
             end;     
           else
             begin  

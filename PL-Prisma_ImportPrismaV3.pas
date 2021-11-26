@@ -410,6 +410,7 @@ begin
         else if (Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_FINAL) > 0) and (not aID_Anbauteil.Count = 0)
         then
         begin
+        is_finished := 0;
           RelatedFileContent := True;         
 //          if (not aID_Anbauteil[0] = '') then my_Anbauteil := aID_Anbauteil[0];
           my_Anbauteil := aID_Anbauteil[0];
@@ -435,8 +436,8 @@ begin
                 list_Vorrichtung.Add(QuData.FieldByName('VORRICHTUNG').AsString);
                 QuData.Next;
                 end;
-                QuData.EnableControls;
-                if (list_Maschine.Count >= 3) then FileToMove := True; 
+              QuData.EnableControls;
+              //if (list_Maschine.Count >= 3) then FileToMove := True; 
               for L := 0 to list_Maschine.Count-1 do begin
                 my_Maschine :=  list_Maschine[L];  
                 my_Schritt :=   list_Schritt[L];
@@ -457,11 +458,13 @@ begin
                 QuData.ParamByName('IS_FINISHED').AsString := is_finished; 
                 QuData.ExecSql;
               end;
+              FileToMove := True; 
               list_Maschine.Free;
               list_Schritt.Free;
               list_Vorrichtung.Free; 
             end;     
-          else
+          //else
+          if not (is_finished) then
             begin  
               //FileToMove := False;
               if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;         

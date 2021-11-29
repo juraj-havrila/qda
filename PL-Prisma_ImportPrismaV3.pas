@@ -32,10 +32,10 @@ const
                                                    //        VORSICHT: der OP in QDA heisst: "OPQPMA_SERIENPRüVUNG_MA" und nicht was mit "OP70". Gibt es zwar auch, ist aber FALSCH !!!
                                                    //        Die Zwischentabelle heisst: ZDC_PRISMA
   //OP_LIST = ';30574-RB5040;OP_DUMMY'; //jhavril, 13.8.2021; OP Liste erstellt
-  OP_LIST = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;30961-AM9110;31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;OP_DUMMY'; //jhavril, 10.11.2021; OP Liste angepasst (beinhaltet Zusammenbaustationen)
+  OP_LIST = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;30961-AM9110;31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;30574-RS5040;OP_DUMMY'; //jhavril, 10.11.2021; OP Liste angepasst (beinhaltet Zusammenbaustationen)
   OP_SCHWEISSEN = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;OP_DUMMY'; //jhavril, 10.11.2021; OP nur Schweißvorgänge
   OP_ZUSAMMENBAU_FINAL = ';30961-AM9110;OP_DUMMY';
-  OP_ZUSAMMENBAU_1 = ';31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;OP_DUMMY';
+  OP_ZUSAMMENBAU_1 = ';31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;30574-RS5040;OP_DUMMY';
 
 // //  OP_LIST = ';30961-AM9110;31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;OP_DUMMY'; //jhavril, 10.11.2021; OP Liste angepasst (beinhaltet Zusammenbaustationen)
 // //  OP_SCHWEISSEN = ';OP_DUMMY'; //jhavril, 10.11.2021; OP nur Schweißvorgänge
@@ -319,7 +319,7 @@ begin
    my_AnzahlAnbauteile := 0;
 ////--------       
 //        my_Filter := Pos('Schweißen ITG', aSchritt); 
-        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos('Schweißen ITG', aSchritt) then     ///nicht sicher ob das notwendig ist
+        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos('ITG', aSchritt) then     ///nicht sicher ob das notwendig ist
         begin
           RelatedFileContent := True;
           QuData := TQuery.Create(nil);
@@ -399,10 +399,10 @@ begin
          FileToMove := True;
          else
             begin  
-              FileToMove := False;
+//              FileToMove := False;
 //              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True; 
               if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;
-//              FileToMove := True; 
+              FileToMove := True; 
             end;   
        end;
     end;
@@ -467,7 +467,8 @@ begin
           if not (is_finished) then
             begin  
               //FileToMove := False;
-              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;         
+              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;  
+              FileToMove := True; 
             end;           
         finally
         QuData.Free;

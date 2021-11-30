@@ -19,19 +19,19 @@
 const
   { Stichprobenfelder }                                                         
   //MAX_ANZ_FILES = 1000;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien 
-  MAX_ANZ_FILES = 500;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
+  MAX_ANZ_FILES = 7000;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
   STPR_IDENT = 1;                         
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
   STPR_VORRICHTUNG = 3;              //20130418_ab/js analog zum Systemscript 7 (von 4 auf 3 gesetzt)
-//  IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
-//  IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG\';                                    
+// IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
+// IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG\swaps';                                    
   { Filter auf zu Verarbeitende OPs }              // aboeg: es werden von PLA alle Telegramme von Prisma übertragen     
   //OP_LIST = ';OP 70A;OP 70B;OP70A;OP70B;OP_DUMMY'; // aboeg, 29.12.2011: OP war falsch: 060 => 070  jbismar hinzugefügt (OP70A,OP70B)
                                                    // aboeg, 27.01.2017: hinter letzten OP muss ein ";" kommen s.u.   !!!!!!!!!!!!!!!!!!
                                                    //        VORSICHT: der OP in QDA heisst: "OPQPMA_SERIENPRüVUNG_MA" und nicht was mit "OP70". Gibt es zwar auch, ist aber FALSCH !!!
                                                    //        Die Zwischentabelle heisst: ZDC_PRISMA
-  //OP_LIST = ';30574-RB5040;OP_DUMMY'; //jhavril, 13.8.2021; OP Liste erstellt
+ // OP_LIST = ';30574-RS5040;OP_DUMMY'; //jhavril, 13.8.2021; OP Liste erstellt
   OP_LIST = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;30961-AM9110;31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;30574-RS5040;OP_DUMMY'; //jhavril, 10.11.2021; OP Liste angepasst (beinhaltet Zusammenbaustationen)
   OP_SCHWEISSEN = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;OP_DUMMY'; //jhavril, 10.11.2021; OP nur Schweißvorgänge
   OP_ZUSAMMENBAU_FINAL = ';30961-AM9110;OP_DUMMY';
@@ -198,7 +198,7 @@ begin
        for K := 0 to aID_Anbauteil.Count-1 do
          begin
          my_anbauteil := aID_Anbauteil[K];
-         ExportFile.Add('<ID_ANBAUTEIL>' + my_anbauteil + '<ID_ANBAUTEIL>');
+         ExportFile.Add('<ID_ANBAUTEIL>' + my_anbauteil + '</ID_ANBAUTEIL>');
          end;
        end;
   ExportFile.Add('</FERTIGUNG>');
@@ -402,7 +402,7 @@ begin
 //              FileToMove := False;
 //              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True; 
               if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;
-              FileToMove := True; 
+              //FileToMove := True; 
             end;   
        end;
     end;
@@ -468,7 +468,7 @@ begin
             begin  
               //FileToMove := False;
               if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;  
-              FileToMove := True; 
+              //FileToMove := True; 
             end;           
         finally
         QuData.Free;

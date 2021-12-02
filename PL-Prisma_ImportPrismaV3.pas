@@ -24,7 +24,7 @@ const
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
   STPR_VORRICHTUNG = 3;              //20130418_ab/js analog zum Systemscript 7 (von 4 auf 3 gesetzt)
-// IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
+ IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
 // IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG\swaps';                                    
   { Filter auf zu Verarbeitende OPs }              // aboeg: es werden von PLA alle Telegramme von Prisma übertragen     
   //OP_LIST = ';OP 70A;OP 70B;OP70A;OP70B;OP_DUMMY'; // aboeg, 29.12.2011: OP war falsch: 060 => 070  jbismar hinzugefügt (OP70A,OP70B)
@@ -416,13 +416,13 @@ begin
            FileToMove := False;
          end;          
 ///     ---/ NEW          
-              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;         
+//              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;         
             end;                  
        finally
           QuData.Free;
        end;
        
-       if (my_AnzahlAnbauteile >= 4) then 
+       if (my_AnzahlAnbauteile >= 3) then 
          FileToMove := True;
          else
             begin  

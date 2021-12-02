@@ -19,7 +19,7 @@
 const
   { Stichprobenfelder }                                                         
   //MAX_ANZ_FILES = 1000;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien 
-  MAX_ANZ_FILES = 7000;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
+  MAX_ANZ_FILES = 500;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
   STPR_IDENT = 1;                         
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
@@ -388,7 +388,34 @@ begin
                end;
              end;
           else
-            begin          
+            begin    
+///     ---NEW    12.2.2021                 
+        try
+           QuData.DatabaseName := 'QDA8';
+           QuData.Close;
+           QuData.Sql.Clear;
+           QuData.Sql.Add('SELECT distinct MASCHINE FROM ZDC_PRISMA');
+           QuData.Sql.Add('WHERE IDENT = :IDENT');
+           QuData.ParamByName('IDENT').AsString := aID;  
+           QuData.Open;
+           if not (QuData.Bof and QuData.Eof) then
+             begin
+              list_Maschine := TStringList.Create;
+              QuData.DisableControls;
+              QuData.First;
+              while not QuData.Eof do begin               
+                list_Maschine.Add(QuData.FieldByName('MASCHINE').AsString);  
+                QuData.Next;
+                end;
+              QuData.EnableControls;   
+              if (list_Maschine.Count >= 3) then FileToMove := True;
+              else FileToMove := False;
+              list_Maschine.Free;
+             end;
+         except
+           FileToMove := False;
+         end;          
+///     ---/ NEW          
               if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;         
             end;                  
        finally

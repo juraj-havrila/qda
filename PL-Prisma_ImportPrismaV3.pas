@@ -253,7 +253,8 @@ begin
   my_schritt := aMaschine;
   columns:= TStringList.Create;
   //columns.CommaText := '1=SUCH20, 2=SUCH21, 3=SUCH22, 4=SUCH3, 5=SUCH4';   //jhavril, 18.10.2021, SUCH3 ist falsch (belegt durch Ident) 3,4,20,21,22 --> 4,5,20,21,22
-  columns.CommaText := '1=SUCH20, 2=SUCH21, 3=SUCH22, 4=SUCH4, 5=SUCH5';
+  //columns.CommaText := '1=SUCH20, 2=SUCH21, 3=SUCH22, 4=SUCH4, 5=SUCH5';
+  columns.CommaText := '1=SUCH20, 2=SUCH21, 3=SUCH22, 4=SUCH4, 5=SUCH4';     //jhavril, 03.12.2021, 4000-er und 5000-er gehen alle in SUCH4
   Delete(my_string, 1,8);
   pom := StrToInt(my_string) div 1000;
   my_column := columns.Values[pom];

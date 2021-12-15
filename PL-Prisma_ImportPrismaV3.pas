@@ -24,7 +24,7 @@ const
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
   STPR_VORRICHTUNG = 3;              //20130418_ab/js analog zum Systemscript 7 (von 4 auf 3 gesetzt)
- IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
+// IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
 // IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG\swaps';                                    
   { Filter auf zu Verarbeitende OPs }              // aboeg: es werden von PLA alle Telegramme von Prisma übertragen     
   //OP_LIST = ';OP 70A;OP 70B;OP70A;OP70B;OP_DUMMY'; // aboeg, 29.12.2011: OP war falsch: 060 => 070  jbismar hinzugefügt (OP70A,OP70B)
@@ -547,8 +547,8 @@ begin
         QuData.EnableControls;
       for L := 0 to list_Ident.Count-1 do begin
         my_Ident :=  list_Ident[L];
-        my_Maschine :=  list_Maschine[L];  
-        my_Schritt :=   list_Schritt[L];
+        my_Maschine := list_Maschine[L];  
+        my_Schritt := list_Schritt[L];
         my_Vorrichtung := list_Vorrichtung[L]; 
         if UpdateSample(my_Ident, my_Maschine, my_Schritt, my_Vorrichtung)
           then is_finished :=2;

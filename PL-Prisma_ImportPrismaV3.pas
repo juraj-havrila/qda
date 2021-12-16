@@ -320,7 +320,7 @@ begin
    my_AnzahlAnbauteile := 0;
 ////--------       
 //        my_Filter := Pos('Schweißen ITG', aSchritt); 
-        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos('ITG', aSchritt) then     ///nicht sicher ob das notwendig ist
+        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos(aSchritt, 'ITG') then     ///nicht sicher ob das notwendig ist
         begin
           RelatedFileContent := True;
           QuData := TQuery.Create(nil);

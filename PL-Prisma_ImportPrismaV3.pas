@@ -19,7 +19,7 @@
 const
   { Stichprobenfelder }                                                         
   //MAX_ANZ_FILES = 1000;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien 
-  MAX_ANZ_FILES = 500;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
+  MAX_ANZ_FILES = 10000;                // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
   STPR_IDENT = 1;                         
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
@@ -508,6 +508,10 @@ begin
         QuData.Free;
        end;
      end;
+////--------
+     
+//     else 
+//         RelatedFileContent := False;
 ////--------
 end;
 

@@ -24,7 +24,7 @@ const
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
   STPR_VORRICHTUNG = 3;              //20130418_ab/js analog zum Systemscript 7 (von 4 auf 3 gesetzt)
- IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
+// IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
 // IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG\swaps';                                    
   { Filter auf zu Verarbeitende OPs }              // aboeg: es werden von PLA alle Telegramme von Prisma übertragen     
   //OP_LIST = ';OP 70A;OP 70B;OP70A;OP70B;OP_DUMMY'; // aboeg, 29.12.2011: OP war falsch: 060 => 070  jbismar hinzugefügt (OP70A,OP70B)
@@ -306,7 +306,6 @@ end;
   @param aVorrichtung Übergabe der Stichprobeninformation "Vorrichtung"
   07.09.2011
 --------------------------------------------------------------------------.ASI DataMyte.}
-//procedure UpdateZDCTable(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil :TStringList);
 procedure UpdateZDCTable(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil :TStringList);
 var
   QuData:              TQuery;   
@@ -316,7 +315,6 @@ var
   my_Maschine:         String;  
   my_Schritt:          String;
   my_Vorrichtung:      String; 
-//  my_Filter:           String; 
   list_Maschine:       TStringList;  
   list_Schritt:        TStringList;
   list_Vorrichtung:    TStringList;
@@ -327,8 +325,6 @@ begin
 //   aDatum :=  AnsiReplaceStr(aDatum, '.', '/');    //jhavril, 25.8.2021: Datum Format fixed (StrToDateTime will '/' statt '.')
    ShortDateFormat := 'dd.mm.yyyy';                //jhavril, 25.8.2021: Datum Format fixed (mm.dd -> dd.mm)
    my_AnzahlAnbauteile := 0;
-////--------       
-//        my_Filter := Pos('Schweißen ITG', aSchritt); 
 
 //22.2.2022        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos(aSchritt, 'ITG') then     ///nicht sicher ob das notwendig ist
         if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 then     ///nicht sicher ob das notwendig ist
@@ -368,7 +364,7 @@ begin
         end;  
         end;
 ////--------    
-        else if (Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_1) > 0) and (not aID_Anbauteil.Count = 0) then
+        else if (Pos(';' + aMaschine + ';', OP_ZUSAMMENBAU_1) > 0) and (aID_Anbauteil.Count = 3) then
         begin
         RelatedFileContent := True;
         for L := 0 to aID_Anbauteil.Count-1 do
@@ -399,50 +395,49 @@ begin
                  QuData.ExecSql;
                end;
              end;
-          else
-            begin    
+   
 ///     ---NEW    12.2.2021                 
         try
-           QuData.DatabaseName := 'QDA8';
-           QuData.Close;
-           QuData.Sql.Clear;
-           QuData.Sql.Add('SELECT distinct MASCHINE FROM ZDC_PRISMA');
-           QuData.Sql.Add('WHERE IDENT = :IDENT');
-           QuData.ParamByName('IDENT').AsString := aID;  
-           QuData.Open;
-           if not (QuData.Bof and QuData.Eof) then
-             begin
-              list_Maschine := TStringList.Create;
-              QuData.DisableControls;
-              QuData.First;
-              while not QuData.Eof do begin               
-                list_Maschine.Add(QuData.FieldByName('MASCHINE').AsString);  
-                QuData.Next;
-                end;
-              QuData.EnableControls;   
-              if (list_Maschine.Count >= 3) then FileToMove := True;
-              else FileToMove := False;
-              list_Maschine.Free;
-             end;
+          QuData.DatabaseName := 'QDA8';
+          QuData.Close;
+          QuData.Sql.Clear;
+          QuData.Sql.Add('SELECT IDENT FROM ZDC_PRISMA');
+          QuData.Sql.Add('WHERE IDENT = :IDENT');
+          QuData.Sql.Add('AND MASCHINE = :MASCHINE');
+          QuData.ParamByName('IDENT').AsString := aID;   
+          QuData.ParamByName('MASCHINE').AsString := aMaschine;   
+          QuData.Open;
+      
+          if (QuData.Bof and QuData.Eof) then
+          begin     
+            QuData.DatabaseName := 'QDA8';
+            QuData.Close;
+            QuData.Sql.Clear;
+            QuData.Sql.Add('INSERT INTO ZDC_PRISMA (IDENT, MASCHINE, SCHRITT, VORRICHTUNG, DATUM, LAST_STEP, IS_FINISHED) VALUES'); // aboeg, 29.12.2011: DATUM eingefügt
+            QuData.Sql.Add('(:IDENT, :MASCHINE, :SCHRITT, :VORRICHTUNG, :DATUM, :LAST_STEP, :IS_FINISHED)');
+            QuData.ParamByName('IDENT').AsString := aID;
+            QuData.ParamByName('MASCHINE').AsString := aMaschine;
+            QuData.ParamByName('SCHRITT').AsString := aSchritt;
+            QuData.ParamByName('VORRICHTUNG').AsString := aVorrichtung;
+            QuData.ParamByName('DATUM').AsDateTime := StrToDateTime(aDatum);    // aboeg, 29.12.2011: DATUM eingefügt
+            QuData.ParamByName('LAST_STEP').AsString := aMaschine;
+            QuData.ParamByName('IS_FINISHED').AsString := '0';
+            QuData.ExecSql;    
+            FileToMove := True;
+          end;
+//       finally
+//        QuData.Free;
          except
-           FileToMove := False;
-         end;          
+         FileToMove := False;
+        end;        
 ///     ---/ NEW          
 //              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;         
-            end;                  
+                           
        finally
           QuData.Free;
        end;
        
-       if (my_AnzahlAnbauteile >= 3) then 
-         FileToMove := True;
-         else
-            begin  
-//              FileToMove := False;
-//              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True; 
-              if (ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil)) then FileToMove := True;
-              //FileToMove := True; 
-            end;   
+
        end;
     end;
 ////--------

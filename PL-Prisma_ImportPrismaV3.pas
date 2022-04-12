@@ -24,7 +24,7 @@ const
   STPR_MASCHINE = 2;            
   STPR_SCHRITT = 3;                  //20130418_ab/js analog zum Systemscript 7, wird nicht benötigt
   STPR_VORRICHTUNG = 3;              //20130418_ab/js analog zum Systemscript 7 (von 4 auf 3 gesetzt)
-// IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
+ IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG_Test';  //jhavril -zum Testen
 // IMPORTSCRIPTPATH = '\\SSTRQLSImportUt.edc.corpintra.net\eingang\PAC\Prisma_ITG\swaps';                                    
   { Filter auf zu Verarbeitende OPs }              // aboeg: es werden von PLA alle Telegramme von Prisma übertragen     
   //OP_LIST = ';OP 70A;OP 70B;OP70A;OP70B;OP_DUMMY'; // aboeg, 29.12.2011: OP war falsch: 060 => 070  jbismar hinzugefügt (OP70A,OP70B)
@@ -33,9 +33,10 @@ const
                                                    //        Die Zwischentabelle heisst: ZDC_PRISMA
  // OP_LIST = ';30574-RS5040;OP_DUMMY'; //jhavril, 13.8.2021; OP Liste erstellt
   OP_LIST = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;30961-AM9110;31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;30574-RS5040;OP_DUMMY'; //jhavril, 10.11.2021; OP Liste angepasst (beinhaltet Zusammenbaustationen)
-  OP_SCHWEISSEN = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;OP_DUMMY'; //jhavril, 10.11.2021; OP nur Schweißvorgänge
+  OP_SCHWEISSEN = ';30554-AS1020;30555-AS1021;30558-AS2020;30559-AS2021;30563-AS3020;30564-AS3021;OP_DUMMY'; //jhavril, 10.11.2021; OP nur Schweißvorgänge
   OP_ZUSAMMENBAU_FINAL = ';30961-AM9110;OP_DUMMY';
-  OP_ZUSAMMENBAU_1 = ';31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;30574-RS5040;OP_DUMMY';
+  OP_ZUSAMMENBAU_1 = ';30568-AS4020;30569-AS4021;30570-AS5020;30571-AS5021;';
+//  OP_ZUSAMMENBAU_1 = ';31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;30574-RB5040;30574-RS5040;OP_DUMMY';
 
 // //  OP_LIST = ';30961-AM9110;31178-RB4050;31180-RB5050;30573-RB4041;31225-RB4010;31226-RB5010;OP_DUMMY'; //jhavril, 10.11.2021; OP Liste angepasst (beinhaltet Zusammenbaustationen)
 // //  OP_SCHWEISSEN = ';OP_DUMMY'; //jhavril, 10.11.2021; OP nur Schweißvorgänge
@@ -47,10 +48,11 @@ var
 function GetValueFromNode(aNodeName, aLine: String): String; forward;
 function ImportPrismaFile(aFilename: String): Boolean; forward;
 function ExportPrismaFile(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil: TStringList): Boolean; forward;
-procedure StartImport; forward;            
+procedure StartImport; forward;    
+procedure UpdateOrphanedSample; forward;
 function UpdateSample(aID, aMaschine, aSchritt, aVorrichtung: String): Boolean; forward;
 procedure UpdateZDCTable(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil: TStringList); forward;
-procedure UpdateOrphanedSample; forward;
+
 //function UpdateZDCTable(aID, aMaschine, aSchritt, aVorrichtung, aDatum, aID_Anbauteil: TStringList): Boolean; forward;
 
                                                                                                  
@@ -70,8 +72,14 @@ var
   Anz_Dateien: Integer;   // aboeg, 29.12.2011: max. Anzahl auf einmal zu importierende Dateien
   FileList: TStringList;
   ImportOK: Boolean;
-  
+//  doOrphans: Integer;
+
 begin
+//  if (User_Var1 = '') then User_Var1 := 0;
+//  doOrphans := AnsiPos('UpdateOrphanedSample', User_Var1);
+//  if ( doOrphans ) then UpdateOrphanedSample;
+
+
   FileList := TStringList.Create;
   try
     // FileList.Text := GetFiles(IMPORTSCRIPTPATH, '*.msg');
@@ -229,6 +237,7 @@ begin
   EndPos :=   Pos('</' + aNodeName + '>', aLine);
   Result := Copy(aLine, StartPos, EndPos - StartPos);
 end;
+//////////////////////////////////////////////////////////////////////////////////
 
 {.ASI DataMyte.-----kuhl-----------------------------------------------------------------
   Durch diese Routine wird die zu dem übergebenen Teileident passende Messung mit
@@ -320,7 +329,9 @@ begin
    my_AnzahlAnbauteile := 0;
 ////--------       
 //        my_Filter := Pos('Schweißen ITG', aSchritt); 
-        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos(aSchritt, 'ITG') then     ///nicht sicher ob das notwendig ist
+
+//22.2.2022        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 and not Pos(aSchritt, 'ITG') then     ///nicht sicher ob das notwendig ist
+        if Pos(';' + aMaschine + ';', OP_SCHWEISSEN) > 0 then     ///nicht sicher ob das notwendig ist
         begin
           RelatedFileContent := True;
           QuData := TQuery.Create(nil);
@@ -579,3 +590,4 @@ begin
     QuData.Free;
   end;
 end;
+
